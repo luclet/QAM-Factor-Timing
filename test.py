@@ -1,3 +1,0 @@
-print("LETSGOOOO")
-
-print("HALLO")
