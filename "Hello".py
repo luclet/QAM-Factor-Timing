@@ -2,6 +2,6 @@ from statistics import median
 
 
 
-median(1,2,3)
+print("Hello")
 
 
