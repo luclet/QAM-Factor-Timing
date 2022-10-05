@@ -1,3 +1,5 @@
+#ÜBERSICHT AN NOTES, TODOS (coding-bezogen)
+
 #Notes:
 #For each Anomaly strategy, we should have the relative valuation
 #in the form of B/M ratio of unterlying stocks.
