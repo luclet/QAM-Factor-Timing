@@ -9,11 +9,14 @@
 #Proposed Code To Dos:
 #1.
 #-Get acustomed to data
-#-divide data into first half / second half for OOS
-#-calculate market beta of portfolios
-#-market adjust data returns and bm ratios? (if not done already)
+#-load data correctly into python
+#-divide data into first half (Jan 74 - Jun 95) / training set for OOS (Jul 95 - Dec 2017) and third section with second half+rest (Jul 95-Dec 19)
+#-calculate market beta of portfolios with the market return portfolio
+#-market adjust data returns and bm ratios? (if not done already, check if data comes adjusted)
 #-rescale market-adjusted returns and bm ratios, so the variance is equal across anomalies
 #2.
-#-Construct PCs of 50 Portfolios
-#Table 1 (p. 18) would be the aggregate using the rescaling weights?
-
+#-Create Q, q from cov(F_t+1)=Q􏰙Q′
+#-Construct PCs of 50 anomaly Portfolios (should be that each PC is for all of the anomalies)
+#-
+#3.
+#-prediction via bm_i,t = q_i′*bm_Ft
