@@ -23,6 +23,12 @@ NEXT STEPS:
     - PC analysis
     - ...
 '''
+
+#from sklearn.decomposition import PCA
+#pca_bm_df_ma_train = PCA(n_components=5)
+#principalComponents_bm_df_ma_train = pca_bm_df_ma_train.fit_transform(x)
+
+
     # Dominant components of factors 
     # ->  We have 55, paper has 50?
 
