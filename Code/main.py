@@ -41,31 +41,25 @@ explained_variance_ret = pca.explained_variance_ratio_
 
 
 ###Predictive Regressions
-#Combine return and bm data again for regression
-return_df_whole = np.concatenate((return_df_train, return_df_test))
-bm_df_Reg = np.concatenate((bm_df_train, bm_df_test))
+#Remove NaN columns from market returns
+market_returns_train_clean = data.market_returns_train.drop(data.market_returns_train.columns[[1, 2, 3]], axis=1)  # df.columns is zero-based pd.Index
 
 #Add the market excess returns to the return PCs as 6th pricing factor
-market_returns_whole = np.concatenate((data.market_returns_train, data.market_returns_test))
-
-#Remove NaN columns from market returns
-index = np.isnan(market_returns_whole).any(axis=0)
-market_returns_whole_clean = np.delete(market_returns_whole, index,axis=1)
-return_df_Reg = np.append(return_df_whole, market_returns_whole_clean, axis=1)
+return_df_Reg = np.append(return_df_train, market_returns_train_clean, axis=1)
 
 #Regress 1995-2017 data of PC returns on net BM ratios
-#from sklearn.linear_model import LinearRegression
-# bm_df_Reg[np.isnan(bm_df_Reg)] = 0
+from sklearn.linear_model import LinearRegression
+bm_df_train[np.isnan(bm_df_train)] = 0
 
-# lm = LinearRegression()
-# model = lm.fit(return_df_Reg, bm_df_Reg)
-# r_squared = model.score(return_df_Reg, bm_df_Reg)
+lm = LinearRegression()
+model = lm.fit(return_df_Reg, bm_df_train)
+r_squared = model.score(return_df_Reg, bm_df_train)
 
-import statsmodels.api as sm
-X2 = sm.add_constant(return_df_Reg)
-est = sm.OLS(bm_df_Reg, X2)
-est2 = est.fit()
-print(est2.summary)
+#import statsmodels.api as sm
+#X2 = sm.add_constant(return_df_Reg)
+#est = sm.OLS(bm_df_Reg, X2)
+#est2 = est.fit()
+#print(est2.summary)
 
 
 

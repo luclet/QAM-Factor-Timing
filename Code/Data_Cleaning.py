@@ -176,3 +176,8 @@ ls_df_ma_test  = ls_df_ma['1995-12-01':'2017-12-01']
 bm_df_ma_train = bm_df_ma['1974-01-01':'1995-12-01']
 bm_df_ma_test  = bm_df_ma['1995-12-01':'2017-12-01']
 
+#import statistics
+z = ls_df_ma_train.std(axis=0)
+zz = ls_df_ma_train.std(axis=1)
+
+
