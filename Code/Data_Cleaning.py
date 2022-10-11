@@ -129,6 +129,9 @@ market_bm = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt', ind
 ls_df_train = ls_df['1974-01-01':'1995-12-01']
 ls_df_test  = ls_df['1995-12-01':'2017-12-01']
 market_returns_train = market_returns['1974-01-01':'1995-12-01']
+market_returns_test = market_returns['1995-12-01':'2017-12-01']
+market_bm_train = market_bm['1974-01-01':'1995-12-01']
+market_bm_test = market_bm['1995-12-01':'2017-12-01']
 
 # betas and var estimated using train sample s.t. OOS statistics contain no look-ahead bias
 betas = []      # for each anomaly
