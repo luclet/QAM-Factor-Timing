@@ -106,6 +106,15 @@ for idx, anom in enumerate(li_bmc10):
     
 bm_df = pd.DataFrame(bm_df)
 
+#%%
+### Removing anomalies with NaN values
+print('Dropping the following anomalies is long-short portfolios: ', ls_df.columns[ls_df.isna().any()].tolist())
+print('Dropping the following anomalies is b/m portfolios: ', bm_df.columns[bm_df.isna().any()].tolist(), '\n')
+
+ls_df = ls_df.dropna(axis='columns')
+bm_df = bm_df.dropna(axis='columns')
+
+#%%
 
 ### Market adjust data
 # check which anomaly has max stocks in pf to calc market returns (siehe check_max.xlsx)
@@ -127,11 +136,11 @@ market_returns = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='r_mkt',
 market_bm = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt', index_col=0)
 
 ls_df_train = ls_df['1974-01-01':'1995-12-01']
-ls_df_test  = ls_df['1995-12-01':'2017-12-01']
+ls_df_test  = ls_df['1996-01-01':'2017-12-01']
 market_returns_train = market_returns['1974-01-01':'1995-12-01']
-market_returns_test = market_returns['1995-12-01':'2017-12-01']
+market_returns_test = market_returns['1996-01-01':'2017-12-01']
 market_bm_train = market_bm['1974-01-01':'1995-12-01']
-market_bm_test = market_bm['1995-12-01':'2017-12-01']
+market_bm_test = market_bm['1996-01-01':'2017-12-01']
 
 # betas and var estimated using train sample s.t. OOS statistics contain no look-ahead bias
 betas = []      # for each anomaly
@@ -171,13 +180,14 @@ for anom in bm_df_ma:
 
 ### Train / Test data split (with new data: train until 1996-12-01!)
 ls_df_ma_train = ls_df_ma['1974-01-01':'1995-12-01']
-ls_df_ma_test  = ls_df_ma['1995-12-01':'2017-12-01']
+ls_df_ma_test  = ls_df_ma['1996-01-01':'2017-12-01']
 
 bm_df_ma_train = bm_df_ma['1974-01-01':'1995-12-01']
-bm_df_ma_test  = bm_df_ma['1995-12-01':'2017-12-01']
+bm_df_ma_test  = bm_df_ma['1996-01-01':'2017-12-01']
 
+'''
 #import statistics
 z = ls_df_ma_train.std(axis=0)
 zz = ls_df_ma_train.std(axis=1)
-
+'''
 
