@@ -114,7 +114,7 @@ print('Dropping the following anomalies is b/m portfolios: ', bm_df.columns[bm_d
 ls_df = ls_df.dropna(axis='columns')
 bm_df = bm_df.dropna(axis='columns')
 
-#%%
+#%% COULD BE DELETED
 
 ### Market adjust data
 # check which anomaly has max stocks in pf to calc market returns (siehe check_max.xlsx)
@@ -128,7 +128,19 @@ for a in li_n10:
 anom_maxsum = max(sums)
 anom_maxsumidx = sums.index(anom_maxsum)  # -> index: 1 (and others but use that)
 
-   
+#%% NEW MARKET DATA
+'''
+market_returns = pd.read_excel(r'../Data/mkt_data.xlsx', sheet_name='mkt_ret', index_col=0)
+market_bm = pd.read_excel(r'../Data/mkt_data.xlsx', sheet_name='mkt_bm', index_col=0)
+
+# index to date
+
+# choose subset by dates
+
+# hi10 - lo10
+
+'''
+#%% OLD MARKET DATA
 # Compute regression beta w.r.t. aggregate market returns
 # split up the data: training set (first half of original data frame), normal reproduction OOS (till 12.17) und new OOS (12.19)
 # each 264 data points
@@ -142,6 +154,7 @@ market_returns_test = market_returns['1996-01-01':'2017-12-01']
 market_bm_train = market_bm['1974-01-01':'1995-12-01']
 market_bm_test = market_bm['1996-01-01':'2017-12-01']
 
+#%%
 # betas and var estimated using train sample s.t. OOS statistics contain no look-ahead bias
 betas = []      # for each anomaly
 ls_df_ma = {}   # market-adjustet df

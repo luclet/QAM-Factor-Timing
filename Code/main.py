@@ -116,6 +116,12 @@ bm_pc2_est = sm.OLS(Y_ret_pc2, X_bm_pc2).fit()
 print(bm_pc2_est.summary())
 
 
+lm = LinearRegression()
+model = lm.fit(X_bm_pc1, Y_ret_pc1)
+print(model.coef_)
+r_squared = model.score(return_df_Reg, bm_df_train)
+
+
 
 
 #%% Jonas
