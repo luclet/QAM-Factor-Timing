@@ -145,7 +145,7 @@ market_bm = pd.read_excel(r'../Data/mkt_data.xlsx', sheet_name='mkt_bm', index_c
 # split up the data: training set (first half of original data frame), normal reproduction OOS (till 12.17) und new OOS (12.19)
 # each 264 data points
 market_returns = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='r_mkt', index_col=0)
-market_bm = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt', index_col=0)
+market_bm = np.log(pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt', index_col=0))
 
 ls_df_train = ls_df['1974-01-01':'1995-12-01']
 ls_df_test  = ls_df['1996-01-01':'2017-12-01']
@@ -184,11 +184,14 @@ bm_df_ma = pd.DataFrame(bm_df_ma)
 # rescale market-adj returns and bm ratios s.t. they have equal variance across anomalies
 # done by dividing returns and bm for each anomaly by its std.deviation s.t. all std.dev are 1
 
+#only using test set for Var
+ls_df_train_adj = ls_df_ma['1974-01-01':'1995-12-01']
 for anom in ls_df_ma:
-    ls_df_ma[anom] = ls_df_ma[anom] / ls_df_ma[anom].var()**(1/2)
+    ls_df_ma[anom] = ls_df_ma[anom] / ls_df_train_adj[anom].var()**(1/2)
 
+bm_df_train_adj = bm_df_ma['1974-01-01':'1995-12-01']
 for anom in bm_df_ma:
-    bm_df_ma[anom] = bm_df_ma[anom] / bm_df_ma[anom].var()**(1/2)
+    bm_df_ma[anom] = bm_df_ma[anom] / bm_df_train_adj[anom].var()**(1/2)
 
 
 ### Train / Test data split (with new data: train until 1996-12-01!)

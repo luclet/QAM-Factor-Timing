@@ -37,7 +37,6 @@ market_returns_test = data.market_returns_test
 market_bm_train = data.market_bm_train
 market_bm_test = data.market_bm_test
 
-
 ### 2. Dominant components of factors
 
 ## PCA Analysis
@@ -91,7 +90,6 @@ return_df_test = np.append(return_df_test, market_returns_test, axis=1)
 # Cals own bm_i,t for each PC_i,t+1
 # --> for loow over all PC and MKT
 
-
 ## Market regression
 #X = sm.add_constant(market_bm_train)
 m1_est = sm.OLS(return_df_test[1:,-1], market_bm_test[:-1]).fit()
@@ -115,6 +113,13 @@ Y_ret_pc2 = return_df_test[1:,1]                                                
 bm_pc2_est = sm.OLS(Y_ret_pc2, X_bm_pc2).fit()
 print(bm_pc2_est.summary())
 
+# Add the market excess returns to the return PCs as 6th pricing factor
+return_df_Reg = np.append(return_df_train, market_returns_train, axis=1)
+
+# Regress 1995-2017 data of PC returns on net BM ratios
+lm = LinearRegression()
+model = lm.fit(return_df_Reg, bm_df_train)
+r_squared = model.score(return_df_Reg, bm_df_train)
 
 lm = LinearRegression()
 model = lm.fit(X_bm_pc1, Y_ret_pc1)
@@ -127,12 +132,12 @@ r_squared = model.score(return_df_Reg, bm_df_train)
 #%% Jonas
 
 # Add the market excess returns to the return PCs as 6th pricing factor
-return_df_Reg = np.append(return_df_train, market_returns_train, axis=1)
+#return_df_Reg = np.append(return_df_train, market_returns_train, axis=1)
 
 # Regress 1995-2017 data of PC returns on net BM ratios
-lm = LinearRegression()
-model = lm.fit(return_df_Reg, bm_df_train)
-r_squared = model.score(return_df_Reg, bm_df_train)
+#lm = LinearRegression()
+#model = lm.fit(return_df_Reg, bm_df_train)
+#r_squared = model.score(return_df_Reg, bm_df_train)
 
 #import statsmodels.api as sm
 #X2 = sm.add_constant(return_df_Reg)
