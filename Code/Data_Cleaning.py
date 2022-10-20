@@ -96,7 +96,7 @@ ls_df = pd.DataFrame(ls_df)
     
 
 ### Constructing measure of relative valuation based on book-to-market ratios
-# bm = log book-to-market ratio pf10 - p1
+# bm = log book-to-market ratio pf10 - log p1
 bm_df = {}
 
 for idx, anom in enumerate(li_bmc10):
@@ -115,7 +115,7 @@ ls_df = ls_df.dropna(axis='columns')
 bm_df = bm_df.dropna(axis='columns')
 
 #%% COULD BE DELETED
-
+'''
 ### Market adjust data
 # check which anomaly has max stocks in pf to calc market returns (siehe check_max.xlsx)
 sums = []
@@ -127,39 +127,42 @@ for a in li_n10:
     
 anom_maxsum = max(sums)
 anom_maxsumidx = sums.index(anom_maxsum)  # -> index: 1 (and others but use that)
-
-#%% NEW MARKET DATA
 '''
-market_returns = pd.read_excel(r'../Data/mkt_data.xlsx', sheet_name='mkt_ret', index_col=0)
-market_bm = pd.read_excel(r'../Data/mkt_data.xlsx', sheet_name='mkt_bm', index_col=0)
 
-# index to date
 
-# choose subset by dates
-
-# hi10 - lo10
-
-'''
-#%% OLD MARKET DATA
+#%% MARKET DATA
 # Compute regression beta w.r.t. aggregate market returns
 # split up the data: training set (first half of original data frame), normal reproduction OOS (till 12.17) und new OOS (12.19)
 # each 264 data points
-market_returns = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='r_mkt', index_col=0)
+
+#market_returns = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='r_mkt', index_col=0)
+market_returns = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='r_mkt_ff', index_col=0)
+#market_bm = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt', index_col=0)
 market_bm = np.log(pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt', index_col=0))
+#market_bm = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_lorena', index_col=0)
+#market_bm = np.log(pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_lorena', index_col=0))
+#market_bm = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_lucas', index_col=0)
+market_bm_aggr = np.log(pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_aggr', index_col=0))
 
 ls_df_train = ls_df['1974-01-01':'1995-12-01']
 ls_df_test  = ls_df['1996-01-01':'2017-12-01']
+bm_df_train = ls_df['1974-01-01':'1995-12-01']
+bm_df_test  = ls_df['1996-01-01':'2017-12-01']
 market_returns_train = market_returns['1974-01-01':'1995-12-01']
 market_returns_test = market_returns['1996-01-01':'2017-12-01']
 market_bm_train = market_bm['1974-01-01':'1995-12-01']
 market_bm_test = market_bm['1996-01-01':'2017-12-01']
+market_bm_aggr_train = market_bm_aggr['1974-01-01':'1995-12-01']
+market_bm_aggr_test = market_bm_aggr['1996-01-01':'2017-12-01']
+
 
 #%%
 # betas and var estimated using train sample s.t. OOS statistics contain no look-ahead bias
 betas = []      # for each anomaly
 ls_df_ma = {}   # market-adjustet df
+bm_df_ma = {}   # market-adjustet df
 
-# betas
+# betas (calculation using train set)
 for idx, anom in enumerate(ls_df_train):
     beta = ls_df_train[anom].cov(market_returns_train.ret)/market_returns_train.ret.var()
     betas.append(beta)
@@ -172,19 +175,17 @@ ls_df_ma = pd.DataFrame(ls_df_ma)
 
 
 # market-scaled bm_df
-bm_df_ma = {}   # market-adjustet df
-
 for idx, anom in enumerate(bm_df):
     bm_df_ma[bm_df.columns[idx]] = bm_df[anom] - betas[idx]*market_bm.bm
 
 bm_df_ma = pd.DataFrame(bm_df_ma)   
 
-
+#%%
 ### Rescale data
 # rescale market-adj returns and bm ratios s.t. they have equal variance across anomalies
 # done by dividing returns and bm for each anomaly by its std.deviation s.t. all std.dev are 1
 
-#only using test set for Var
+# only using train set for Var
 ls_df_train_adj = ls_df_ma['1974-01-01':'1995-12-01']
 for anom in ls_df_ma:
     ls_df_ma[anom] = ls_df_ma[anom] / ls_df_train_adj[anom].var()**(1/2)

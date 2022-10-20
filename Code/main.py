@@ -17,7 +17,7 @@ import statsmodels.api as sm
 import warnings
 warnings.filterwarnings("ignore")
 
-#%%
+
 
 ### 1. Data cleaning
 # see Data_Cleaning.py
@@ -36,6 +36,12 @@ market_returns_train = data.market_returns_train
 market_returns_test = data.market_returns_test
 market_bm_train = data.market_bm_train
 market_bm_test = data.market_bm_test
+
+
+market_bm_aggr = data.market_bm_aggr
+market_bm_aggr_train = data.market_bm_aggr_train
+market_bm_aggr_test = data.market_bm_aggr_test
+
 
 ### 2. Dominant components of factors
 
@@ -91,8 +97,10 @@ return_df_test = np.append(return_df_test, market_returns_test, axis=1)
 # --> for loow over all PC and MKT
 
 ## Market regression
-#X = sm.add_constant(market_bm_train)
-m1_est = sm.OLS(return_df_test[1:,-1], market_bm_test[:-1]).fit()
+#X = sm.add_constant(market_bm_aggr_test[:-1])
+#X = sm.add_constant(market_bm_test[:-1])
+X = sm.add_constant(np.log(market_bm_test[:-1]))
+m1_est = sm.OLS(return_df_test[1:,-1], X).fit()
 print(m1_est.summary())
 
 
@@ -100,10 +108,11 @@ print(m1_est.summary())
 
 # lin. comb. of eigenvector loadings q with bm (q'_i * bm^F_i)
 X_bm_pc1 = sm.add_constant(np.dot(pc_eigenv_df.iloc[0,:].values, bm_df_test.transpose())[:-1])  # starting at 0 (t) and deleting last value
-Y_ret_pc1 = return_df_test[1:,0]                                                                # sterting at 1 (t+1)
+Y_ret_pc1 = return_df_test[1:,0]                                                                 # starting at 1 (t+1)
 
 bm_pc1_est = sm.OLS(Y_ret_pc1, X_bm_pc1).fit()
 print(bm_pc1_est.summary())
+
 
 ## PC2 regression   
 
@@ -113,7 +122,9 @@ Y_ret_pc2 = return_df_test[1:,1]                                                
 bm_pc2_est = sm.OLS(Y_ret_pc2, X_bm_pc2).fit()
 print(bm_pc2_est.summary())
 
-# Add the market excess returns to the return PCs as 6th pricing factor
+#%% Lucas
+
+# Add the market excess returns to the return PCs as 6th pricing factor     -->already done in line 72/73
 return_df_Reg = np.append(return_df_train, market_returns_train, axis=1)
 
 # Regress 1995-2017 data of PC returns on net BM ratios
@@ -122,7 +133,7 @@ model = lm.fit(return_df_Reg, bm_df_train)
 r_squared = model.score(return_df_Reg, bm_df_train)
 
 lm = LinearRegression()
-model = lm.fit(X_bm_pc1, Y_ret_pc1)
+model = lm.fit(Y_ret_pc1, X_bm_pc1)
 print(model.coef_)
 r_squared = model.score(return_df_Reg, bm_df_train)
 
