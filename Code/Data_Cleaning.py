@@ -106,6 +106,7 @@ for idx, anom in enumerate(li_bmc10):
     
 bm_df = pd.DataFrame(bm_df)
 
+
 #%%
 ### Removing anomalies with NaN values
 print('Dropping the following anomalies is long-short portfolios: ', ls_df.columns[ls_df.isna().any()].tolist())
@@ -138,10 +139,11 @@ anom_maxsumidx = sums.index(anom_maxsum)  # -> index: 1 (and others but use that
 #market_returns = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='r_mkt', index_col=0)
 market_returns = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='r_mkt_ff', index_col=0)
 #market_bm = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt', index_col=0)
-market_bm = np.log(pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt', index_col=0))
-#market_bm = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_lorena', index_col=0)
-#market_bm = np.log(pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_lorena', index_col=0))
-#market_bm = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_lucas', index_col=0)
+#market_bm = np.log(pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt', index_col=0)) #bm_mkt ist falsch, da wir hier die Verzerrung durch die n's haben
+market_bm = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_lorena', index_col=0)
+#market_bm = np.log(pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_lorena', index_col=0)) #fixed the verzerrung der n's, könnte richtig sein
+#market_bm = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_lucas', index_col=0) #aus excel ist falsch, da wir die Sortierung nicht eingefügt haben
+#market_bm = np.log(pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_aggr', index_col=0))
 market_bm_aggr = np.log(pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_aggr', index_col=0))
 
 ls_df_train = ls_df['1974-01-01':'1995-12-01']
