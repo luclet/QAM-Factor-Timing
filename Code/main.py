@@ -34,7 +34,6 @@ bm_df_train = data.bm_df_ma_train
 bm_df_test = data.bm_df_ma_test
 market_returns_train = data.market_returns_train
 market_returns_test = data.market_returns_test
-market_returns_train_rescaled = data.market_returns_train_rescaled
 market_bm_train = data.market_bm_train
 market_bm_test = data.market_bm_test
 
@@ -42,12 +41,7 @@ market_bm_test = data.market_bm_test
 market_bm_aggr = data.market_bm_aggr
 market_bm_aggr_train = data.market_bm_aggr_train
 market_bm_aggr_test = data.market_bm_aggr_test
-market_bm_by_n = data.market_bm_by_n
-market_bm_by_n_train = data.market_bm_by_n_train
-market_bm_by_n_test = data.market_bm_by_n_test
-market_bm_equal = data.market_bm_equal
-market_bm_equal_train = data.market_bm_equal_train
-market_bm_equal_test = data.market_bm_equal_test
+
 
 #%%
 ### 2. Dominant components of factors
@@ -56,14 +50,14 @@ market_bm_equal_test = data.market_bm_equal_test
 # Scaling data to have expectation of 0 and variance of 1
 sc = StandardScaler()
 return_df_train = sc.fit_transform(return_df_train)
-#return_df_test = sc.transform(return_df_test)
+return_df_test = sc.transform(return_df_test)
 
 
 # Applying PCA function on training and testing set
 n_pc = 5
 pca = PCA(n_components = n_pc)
 return_df_train = pca.fit_transform(return_df_train)
-#return_df_test = pca.transform(return_df_test)
+return_df_test = pca.transform(return_df_test)
 
 # Explained variance of 5 PCs
 explained_variance_ret = pca.explained_variance_ratio_.tolist()
@@ -82,8 +76,8 @@ pc_eigenv_df = pd.DataFrame(pca.components_,columns=return_df.columns,index = pc
 print(pc_eigenv_df)
 
 # Including market pf as pricing factor
-return_df_train = np.append(return_df_train, market_returns_train_rescaled, axis=1)
-#return_df_test = np.append(return_df_test, market_returns_test, axis=1)
+return_df_train = np.append(return_df_train, market_returns_train, axis=1)
+return_df_test = np.append(return_df_test, market_returns_test, axis=1)
 
 # return_df_t columns: PC1, PC2, PC3, PC4, PC5, MKT
 
@@ -104,9 +98,8 @@ return_df_train = np.append(return_df_train, market_returns_train_rescaled, axis
 # --> for loow over all PC and MKT
 
 ## Market regression
-#X = sm.add_constant(market_bm_train[:-1])
-#X = sm.add_constant(market_bm_train[:-1])
-X = sm.add_constant(market_bm_train[:-1])
+X = sm.add_constant(np.log(market_bm_train[:-1]))
+#X = sm.add_constant(np.log(market_bm_aggr_train[:-1]))
 m1_est = sm.OLS(return_df_train[1:,-1], X).fit()
 print(m1_est.summary())
 
