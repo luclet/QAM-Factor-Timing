@@ -34,6 +34,7 @@ bm_df_train = data.bm_df_ma_train
 bm_df_test = data.bm_df_ma_test
 market_returns_train = data.market_returns_train
 market_returns_test = data.market_returns_test
+market_returns_train_rescaled = data.market_returns_train_rescaled
 market_bm_train = data.market_bm_train
 market_bm_test = data.market_bm_test
 
@@ -41,6 +42,12 @@ market_bm_test = data.market_bm_test
 market_bm_aggr = data.market_bm_aggr
 market_bm_aggr_train = data.market_bm_aggr_train
 market_bm_aggr_test = data.market_bm_aggr_test
+market_bm_by_n = data.market_bm_by_n
+market_bm_by_n_train = data.market_bm_by_n_train
+market_bm_by_n_test = data.market_bm_by_n_test
+market_bm_equal = data.market_bm_equal
+market_bm_equal_train = data.market_bm_equal_train
+market_bm_equal_test = data.market_bm_equal_test
 
 #%%
 ### 2. Dominant components of factors
@@ -75,7 +82,7 @@ pc_eigenv_df = pd.DataFrame(pca.components_,columns=return_df.columns,index = pc
 print(pc_eigenv_df)
 
 # Including market pf as pricing factor
-return_df_train = np.append(return_df_train, market_returns_train, axis=1)
+return_df_train = np.append(return_df_train, market_returns_train_rescaled, axis=1)
 #return_df_test = np.append(return_df_test, market_returns_test, axis=1)
 
 # return_df_t columns: PC1, PC2, PC3, PC4, PC5, MKT
@@ -97,12 +104,11 @@ return_df_train = np.append(return_df_train, market_returns_train, axis=1)
 # --> for loow over all PC and MKT
 
 ## Market regression
-#X = sm.add_constant(market_bm_aggr_train[:-1])
+#X = sm.add_constant(market_bm_train[:-1])
+#X = sm.add_constant(market_bm_train[:-1])
 X = sm.add_constant(market_bm_train[:-1])
-#X = sm.add_constant(market_bm_test[:-1])
 m1_est = sm.OLS(return_df_train[1:,-1], X).fit()
 print(m1_est.summary())
-
 
 ## PC1 regression   --> regressor: bm_i,t = q'_i * bm^F_i
 
@@ -122,39 +128,8 @@ Y_ret_pc2 = return_df_train[1:,1]                                               
 bm_pc2_est = sm.OLS(Y_ret_pc2, X_bm_pc2).fit()
 print(bm_pc2_est.summary())
 
-#%% Jonas
-
-# Add the market excess returns to the return PCs as 6th pricing factor     -->already done in line 72/73
-return_df_Reg = np.append(return_df_train, market_returns_train, axis=1)
-
-# Regress 1995-2017 data of PC returns on net BM ratios
-lm = LinearRegression()
-model = lm.fit(return_df_Reg, bm_df_train)
-r_squared = model.score(return_df_Reg, bm_df_train)
-
-lm = LinearRegression()
-model = lm.fit(Y_ret_pc1, X_bm_pc1)
-print(model.coef_)
-r_squared = model.score(return_df_Reg, bm_df_train)
 
 
-
-
-#%% Jonas
-
-# Add the market excess returns to the return PCs as 6th pricing factor
-#return_df_Reg = np.append(return_df_train, market_returns_train, axis=1)
-
-# Regress 1995-2017 data of PC returns on net BM ratios
-#lm = LinearRegression()
-#model = lm.fit(return_df_Reg, bm_df_train)
-#r_squared = model.score(return_df_Reg, bm_df_train)
-
-#import statsmodels.api as sm
-#X2 = sm.add_constant(return_df_Reg)
-#est = sm.OLS(bm_df_Reg, X2)
-#est2 = est.fit()
-#print(est2.summary)
 
 
 #%%

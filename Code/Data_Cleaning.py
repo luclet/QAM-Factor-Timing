@@ -93,7 +93,9 @@ for idx, anom in enumerate(li_ret10):
     ls_df[name] = diff
     
 ls_df = pd.DataFrame(ls_df)
-    
+# drop factors that are not in paper
+ls_df.drop('exchsw', inplace=True, axis=1)
+ls_df.drop('divg', inplace=True, axis=1)
 
 ### Constructing measure of relative valuation based on book-to-market ratios
 # bm = log book-to-market ratio pf10 - log p1
@@ -105,6 +107,9 @@ for idx, anom in enumerate(li_bmc10):
     bm_df[name] = diff
     
 bm_df = pd.DataFrame(bm_df)
+# drop factors that are not in paper
+bm_df.drop('exchsw', inplace=True, axis=1)
+bm_df.drop('divg', inplace=True, axis=1)
 
 
 #%%
@@ -145,6 +150,9 @@ market_bm = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_loren
 #market_bm = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_lucas', index_col=0) #aus excel ist falsch, da wir die Sortierung nicht eingefügt haben
 #market_bm = np.log(pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_aggr', index_col=0))
 market_bm_aggr = np.log(pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_aggr', index_col=0))
+market_bm_by_n = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_by_n', index_col=0)
+market_bm_equal = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_equal', index_col=0)
+
 
 ls_df_train = ls_df['1974-01-01':'1995-12-01']
 ls_df_test  = ls_df['1996-01-01':'2017-12-01']
@@ -156,7 +164,10 @@ market_bm_train = market_bm['1974-01-01':'1995-12-01']
 market_bm_test = market_bm['1996-01-01':'2017-12-01']
 market_bm_aggr_train = market_bm_aggr['1974-01-01':'1995-12-01']
 market_bm_aggr_test = market_bm_aggr['1996-01-01':'2017-12-01']
-
+market_bm_by_n_train = market_bm_by_n['1974-01-01':'1995-12-01']
+market_bm_by_n_test = market_bm_by_n['1996-01-01':'2017-12-01']
+market_bm_equal_train = market_bm_equal['1974-01-01':'1995-12-01']
+market_bm_equal_test = market_bm_equal['1996-01-01':'2017-12-01']
 
 #%%
 # betas and var estimated using train sample s.t. OOS statistics contain no look-ahead bias
@@ -180,6 +191,7 @@ ls_df_ma = pd.DataFrame(ls_df_ma)
 for idx, anom in enumerate(bm_df):
     bm_df_ma[bm_df.columns[idx]] = bm_df[anom] - betas[idx]*market_bm.bm
 
+# rescaled market returns
 bm_df_ma = pd.DataFrame(bm_df_ma)   
 
 #%%
@@ -196,6 +208,7 @@ bm_df_train_adj = bm_df_ma['1974-01-01':'1995-12-01']
 for anom in bm_df_ma:
     bm_df_ma[anom] = bm_df_ma[anom] / bm_df_train_adj[anom].var()**(1/2)
 
+market_returns_train_rescaled = market_returns_train / market_returns_train.var()**(1/2)
 
 ### Train / Test data split (with new data: train until 1996-12-01!)
 ls_df_ma_train = ls_df_ma['1974-01-01':'1995-12-01']
