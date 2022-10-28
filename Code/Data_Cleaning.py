@@ -173,7 +173,6 @@ market_bm_aggr_test = market_bm_aggr['1996-01-01':'2017-12-01']
 betas = []      # for each anomaly
 ls_df_ma = {}   # market-adjustet df
 bm_df_ma = {}   # market-adjustet df
-
 # betas (calculation using train set)
 for idx, anom in enumerate(ls_df_train):
     beta = ls_df_train[anom].cov(market_returns_train.ret)/market_returns_train.ret.var()
@@ -199,15 +198,16 @@ bm_df_ma = pd.DataFrame(bm_df_ma)
 # done by dividing returns and bm for each anomaly by its std.deviation s.t. all std.dev are 1
 
 # only using train set for Var
-ls_df_train_adj = ls_df_ma['1974-01-01':'1995-12-01']
-for anom in ls_df_ma:
-    ls_df_ma[anom] = ls_df_ma[anom] / ls_df_train_adj[anom].var()**(1/2)
+#ls_df_train_adj = ls_df_ma['1974-01-01':'1995-12-01']
+#for anom in ls_df_ma:
+#    ls_df_ma[anom] = ls_df_ma[anom] / ls_df_ma[anom].var()**(1/2)
 
 bm_df_train_adj = bm_df_ma['1974-01-01':'1995-12-01']
 for anom in bm_df_ma:
-    bm_df_ma[anom] = bm_df_ma[anom] / bm_df_train_adj[anom].var()**(1/2)
+    bm_df_ma[anom] = bm_df_ma[anom] / bm_df_ma[anom].var()**(1/2)
 
-market_returns = market_returns / market_returns_train.var()**(1/2)
+market_returns = market_returns / market_returns.var()**(1/2)
+market_bm = market_bm / market_bm.var()**(1/2)
 
 ### Train / Test data split (with new data: train until 1996-12-01!)
 ls_df_ma_train = ls_df_ma['1974-01-01':'1995-12-01']
