@@ -106,7 +106,7 @@ print(m1_est.summary())
 ## PC1 regression   --> regressor: bm_i,t = q'_i * bm^F_i
 
 # lin. comb. of eigenvector loadings q with bm (q'_i * bm^F_i)
-X_bm_pc1 = sm.add_constant(np.dot(pc_eigenv_df.iloc[0,:].values, bm_df_train.transpose())[:-1])  # starting at 0 (t) and deleting last value
+X_bm_pc1 = sm.add_constant(np.dot(pc_eigenv_df.iloc[0,1:].values, bm_df_train.transpose())[:-1])  # starting at 0 (t) and deleting last value
 Y_ret_pc1 = return_df_train[1:,0]                                                                 # starting at 1 (t+1)
 
 bm_pc1_est = sm.OLS(Y_ret_pc1, X_bm_pc1).fit()
@@ -115,7 +115,7 @@ print(bm_pc1_est.summary())
 
 ## PC2 regression   
 
-X_bm_pc2 = sm.add_constant(np.dot(pc_eigenv_df.iloc[1,:].values, bm_df_train.transpose())[:-1])  # starting at 0 (t) and deleting last value
+X_bm_pc2 = sm.add_constant(np.dot(pc_eigenv_df.iloc[1,1:].values, bm_df_train.transpose())[:-1])  # starting at 0 (t) and deleting last value
 Y_ret_pc2 = return_df_train[1:,1]                                                                # sterting at 1 (t+1)
 
 bm_pc2_est = sm.OLS(Y_ret_pc2, X_bm_pc2).fit()
