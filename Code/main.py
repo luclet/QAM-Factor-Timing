@@ -23,15 +23,19 @@ warnings.filterwarnings("ignore")
 # see Data_Cleaning.py
 
 # reading the cleaned data form Data_Cleaning.py
-return_df = data.ls_df_ma
-bm_df = data.bm_df_ma
+
+#return_df = data.ls_df
+#bm_df = data.bm_df_ma
 market_returns = data.market_returns
 market_bm = data.market_bm
 
 return_df_train = data.ls_df_ma_train
-return_df_test = data.ls_df_ma_test
+return_df_test = data.ls_df_test
+return_df_extra = data.ls_df_extra
+frames = [return_df_train, return_df_test, return_df_extra]
+return_df = pd.concat(frames)
 bm_df_train = data.bm_df_ma_train
-bm_df_test = data.bm_df_ma_test
+bm_df_test = data.bm_df_test
 market_returns_train = data.market_returns_train
 market_returns_test = data.market_returns_test
 market_bm_train = data.market_bm_train
@@ -72,6 +76,7 @@ print('\nPercentage of variance explained by anomaly PCs:\n', expl_var_df)
 REMARK:
     First 5 PC explain over 60% of the variance, hence we use the first 5 as predicting dominant components!
 '''
+#return_df_train = pd.DataFrame(return_df_train)
 pc_eigenv_df = pd.DataFrame(pca.components_,columns=return_df.columns,index = pc_list)
 print(pc_eigenv_df)
 
@@ -106,8 +111,8 @@ print(m1_est.summary())
 ## PC1 regression   --> regressor: bm_i,t = q'_i * bm^F_i
 
 # lin. comb. of eigenvector loadings q with bm (q'_i * bm^F_i)
-X_bm_pc1_train = sm.add_constant(np.dot(pc_eigenv_df.iloc[0,1:].values, bm_df_train.transpose())[:-1])  # starting at 0 (t) and deleting last value
-X_bm_pc1_test = sm.add_constant(np.dot(pc_eigenv_df.iloc[0,1:].values, bm_df_test.transpose())[:-1])  # starting at 0 (t) and deleting last value
+X_bm_pc1_train = sm.add_constant(np.dot(pc_eigenv_df.iloc[0,:].values, bm_df_train.transpose())[:-1])  # starting at 0 (t) and deleting last value
+X_bm_pc1_test = sm.add_constant(np.dot(pc_eigenv_df.iloc[0,:].values, bm_df_test.transpose())[:-1])  # starting at 0 (t) and deleting last value
 
 Y_ret_pc1_train = return_df_train[1:,0]                                                                 # starting at 1 (t+1)
 Y_ret_pc1_test = return_df_test[1:,0]                                                                 # starting at 1 (t+1)
@@ -119,8 +124,8 @@ print(bm_pc1_est_train.summary())
 
 ## PC2 regression   
 
-X_bm_pc2_train = sm.add_constant(np.dot(pc_eigenv_df.iloc[1,1:].values, bm_df_train.transpose())[:-1])  # starting at 0 (t) and deleting last value
-X_bm_pc2_test = sm.add_constant(np.dot(pc_eigenv_df.iloc[1,1:].values, bm_df_test.transpose())[:-1])  # starting at 0 (t) and deleting last value
+X_bm_pc2_train = sm.add_constant(np.dot(pc_eigenv_df.iloc[1,:].values, bm_df_train.transpose())[:-1])  # starting at 0 (t) and deleting last value
+X_bm_pc2_test = sm.add_constant(np.dot(pc_eigenv_df.iloc[1,:].values, bm_df_test.transpose())[:-1])  # starting at 0 (t) and deleting last value
 
 Y_ret_pc2_train = return_df_train[1:,1]                                                                 # starting at 1 (t+1)
 Y_ret_pc2_test = return_df_test[1:,1]                                                                 # starting at 1 (t+1)
@@ -133,8 +138,8 @@ print(bm_pc2_est_train.summary())
 
 ## PC3 regression   
 
-X_bm_pc3_train = sm.add_constant(np.dot(pc_eigenv_df.iloc[2,1:].values, bm_df_train.transpose())[:-1])  # starting at 0 (t) and deleting last value
-X_bm_pc3_test = sm.add_constant(np.dot(pc_eigenv_df.iloc[2,1:].values, bm_df_test.transpose())[:-1])  # starting at 0 (t) and deleting last value
+X_bm_pc3_train = sm.add_constant(np.dot(pc_eigenv_df.iloc[2,:].values, bm_df_train.transpose())[:-1])  # starting at 0 (t) and deleting last value
+X_bm_pc3_test = sm.add_constant(np.dot(pc_eigenv_df.iloc[2,:].values, bm_df_test.transpose())[:-1])  # starting at 0 (t) and deleting last value
 
 Y_ret_pc3_train = return_df_train[1:,2]                                                                 # starting at 1 (t+1)
 Y_ret_pc3_test = return_df_test[1:,2]                                                                 # starting at 1 (t+1)
@@ -147,8 +152,8 @@ print(bm_pc2_est_train.summary())
 
 ## PC4 regression   
 
-X_bm_pc4_train = sm.add_constant(np.dot(pc_eigenv_df.iloc[3,1:].values, bm_df_train.transpose())[:-1])  # starting at 0 (t) and deleting last value
-X_bm_pc4_test = sm.add_constant(np.dot(pc_eigenv_df.iloc[3,1:].values, bm_df_test.transpose())[:-1])  # starting at 0 (t) and deleting last value
+X_bm_pc4_train = sm.add_constant(np.dot(pc_eigenv_df.iloc[3,:].values, bm_df_train.transpose())[:-1])  # starting at 0 (t) and deleting last value
+X_bm_pc4_test = sm.add_constant(np.dot(pc_eigenv_df.iloc[3,:].values, bm_df_test.transpose())[:-1])  # starting at 0 (t) and deleting last value
 
 Y_ret_pc4_train = return_df_train[1:,3]                                                                 # starting at 1 (t+1)
 Y_ret_pc4_test = return_df_test[1:,3]                                                                 # starting at 1 (t+1)
@@ -161,8 +166,8 @@ print(bm_pc4_est_train.summary())
 
 ## PC5 regression   
 
-X_bm_pc5_train = sm.add_constant(np.dot(pc_eigenv_df.iloc[4,1:].values, bm_df_train.transpose())[:-1])  # starting at 0 (t) and deleting last value
-X_bm_pc5_test = sm.add_constant(np.dot(pc_eigenv_df.iloc[4,1:].values, bm_df_test.transpose())[:-1])  # starting at 0 (t) and deleting last value
+X_bm_pc5_train = sm.add_constant(np.dot(pc_eigenv_df.iloc[4,:].values, bm_df_train.transpose())[:-1])  # starting at 0 (t) and deleting last value
+X_bm_pc5_test = sm.add_constant(np.dot(pc_eigenv_df.iloc[4,:].values, bm_df_test.transpose())[:-1])  # starting at 0 (t) and deleting last value
 
 Y_ret_pc5_train = return_df_train[1:,4]                                                                 # starting at 1 (t+1)
 Y_ret_pc5_test = return_df_test[1:,4]                                                                 # starting at 1 (t+1)
@@ -191,11 +196,15 @@ print(bm_pc5_est_train.summary())
 #loop over individual factor returns and append the R-squared to a mew df
 
 
-#IS Factor Returns
-IS_fac_ret = data.ls_df_ma
-#OOS Factor Returns
-OOS_fac_ret = data.ls_df_ma_test
+# #IS Factor Returns
+# IS_fac_ret = data.ls_df_ma
+# #OOS Factor Returns
+# OOS_fac_ret = data.ls_df_ma_test
 
+#IS Factor Returns
+IS_fac_ret = return_df
+#OOS Factor Returns
+OOS_fac_ret = return_df_test
 
 
 X_fit_pc1_train = sm.add_constant(bm_pc1_est_train.fittedvalues)
