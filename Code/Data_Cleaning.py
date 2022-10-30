@@ -158,6 +158,7 @@ market_bm = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_equal
 
 ls_df_train = ls_df['1974-01-01':'1995-12-01']
 ls_df_test  = ls_df['1996-01-01':'2017-12-01']
+ls_df_extra = ls_df['2018-01-01':'2019-12-01']
 bm_df_train = ls_df['1974-01-01':'1995-12-01']
 bm_df_test  = ls_df['1996-01-01':'2017-12-01']
 market_returns_train = market_returns['1974-01-01':'1995-12-01']
@@ -168,60 +169,60 @@ market_bm_aggr_train = market_bm_aggr['1974-01-01':'1995-12-01']
 market_bm_aggr_test = market_bm_aggr['1996-01-01':'2017-12-01']
 
 
+
+
 #%%
 # betas and var estimated using train sample s.t. OOS statistics contain no look-ahead bias
 betas = []      # for each anomaly
-ls_df_ma = {}   # market-adjustet df
-bm_df_ma = {}   # market-adjustet df
+ls_df_ma_train = {}   # market-adjustet df
+bm_df_ma_train = {}   # market-adjustet df
+
 # betas (calculation using train set)
 for idx, anom in enumerate(ls_df_train):
     beta = ls_df_train[anom].cov(market_returns_train.ret)/market_returns_train.ret.var()
     betas.append(beta)
 
-# market-scaled ls_df
-for idx, anom in enumerate(ls_df):
-    ls_df_ma[ls_df.columns[idx]] = ls_df[anom] - betas[idx]*market_returns.ret
+# market-scaled ls_df (only train set)
+for idx, anom in enumerate(ls_df_train):
+    ls_df_ma_train[ls_df_train.columns[idx]] = ls_df_train[anom] - betas[idx]*market_returns_train.ret
 
-ls_df_ma = pd.DataFrame(ls_df_ma)
+ls_df_ma_train = pd.DataFrame(ls_df_ma_train)
 
 
-# market-scaled bm_df
-for idx, anom in enumerate(bm_df):
-    bm_df_ma[bm_df.columns[idx]] = bm_df[anom] - betas[idx]*market_bm.bm
+# market-scaled bm_df (only train set)
+for idx, anom in enumerate(bm_df_train):
+    bm_df_ma_train[bm_df_train.columns[idx]] = bm_df_train[anom] - betas[idx]*market_bm_train.bm
 
 # rescaled market returns
-bm_df_ma = pd.DataFrame(bm_df_ma)   
+bm_df_ma_train = pd.DataFrame(bm_df_ma_train)   
 
 #%%
 ### Rescale data
 # rescale market-adj returns and bm ratios s.t. they have equal variance across anomalies
 # done by dividing returns and bm for each anomaly by its std.deviation s.t. all std.dev are 1
+# only train set
 
-# only using train set for Var
-#ls_df_train_adj = ls_df_ma['1974-01-01':'1995-12-01']
-#for anom in ls_df_ma:
-#    ls_df_ma[anom] = ls_df_ma[anom] / ls_df_ma[anom].var()**(1/2)
+for anom in ls_df_ma_train:
+    ls_df_ma_train[anom] = ls_df_ma_train[anom] / ls_df_ma_train[anom].var()**(1/2)
 
-bm_df_train_adj = bm_df_ma['1974-01-01':'1995-12-01']
-for anom in bm_df_ma:
-    bm_df_ma[anom] = bm_df_ma[anom] / bm_df_ma[anom].var()**(1/2)
+for anom in bm_df_ma_train:
+    bm_df_ma_train[anom] = bm_df_ma_train[anom] / bm_df_ma_train[anom].var()**(1/2)
 
-market_returns = market_returns / market_returns.var()**(1/2)
-market_bm = market_bm / market_bm.var()**(1/2)
-
-### Train / Test data split (with new data: train until 1996-12-01!)
-ls_df_ma_train = ls_df_ma['1974-01-01':'1995-12-01']
-ls_df_ma_test  = ls_df_ma['1996-01-01':'2017-12-01']
-
-bm_df_ma_train = bm_df_ma['1974-01-01':'1995-12-01']
-bm_df_ma_test  = bm_df_ma['1996-01-01':'2017-12-01']
-
-market_returns_train = market_returns['1974-01-01':'1995-12-01']
-market_returns_test  = market_returns['1996-01-01':'2017-12-01']
-
+'''ich glaube das muss man nicht
+market_returns_train = market_returns_train / market_returns_train.var()**(1/2)
+market_bm_train = market_bm_train / market_bm_train.var()**(1/2)
 '''
-#import statistics
-z = ls_df_ma_train.std(axis=0)
-zz = ls_df_ma_train.std(axis=1)
-'''
+
+
+# Final dataframes
+ls_df_ma_train 
+ls_df_test  
+bm_df_ma_train 
+bm_df_test  
+market_returns_train 
+market_returns_test 
+market_bm_train 
+market_bm_test 
+market_bm_aggr_train 
+market_bm_aggr_test 
 
