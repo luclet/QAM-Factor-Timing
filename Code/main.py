@@ -196,18 +196,18 @@ print(output_df)
 
 
 #IS Factor Returns
-IS_fac_ret = return_df_train  # using scaled or non-scaled ones for train set?
+IS_fac_ret = data.ls_df_ma_train  # using scaled or non-scaled ones for train set?
+
 #OOS Factor Returns
-OOS_fac_ret = return_df_test
+OOS_fac_ret = data.ls_df_test
 
+X_fit_pc_train = [bm_pc1_est_train.fittedvalues, bm_pc2_est_train.fittedvalues, bm_pc3_est_train.fittedvalues, bm_pc4_est_train.fittedvalues, bm_pc5_est_train.fittedvalues]
+X_fit_pc_train = np.transpose(X_fit_pc_train)
+X_fit_pc_train = sm.add_constant(X_fit_pc_train)
 
-
-X_fit_pc1_train = sm.add_constant(bm_pc1_est_train.fittedvalues)
-#X_fit_pc1_OOS = 
-#Y_ret_pc1 = IS_fac_ret
-
-#bm_pc1_est = sm.OLS(Y_ret_pc1, X_bm_pc1).fit()
-#print(bm_pc1_est.summary())
+bm_pc1_est = sm.OLS(list(IS_fac_ret['accruals'].iloc[1:]), X_fit_pc_train).fit()
+#X_fit_pc_train[:,0], X_fit_pc_train[:,1], X_fit_pc_train[:,2], X_fit_pc_train[:,3], X_fit_pc_train[:,4], X_fit_pc_train[:,5]
+print(bm_pc1_est.summary())
 
 
 
