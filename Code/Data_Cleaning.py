@@ -174,8 +174,8 @@ market_bm_aggr_test = market_bm_aggr['1996-01-01':'2017-12-01']
 #%%
 # betas and var estimated using train sample s.t. OOS statistics contain no look-ahead bias
 betas = []      # for each anomaly
-ls_df_ma_train = {}   # market-adjustet df
-bm_df_ma_train = {}   # market-adjustet df
+ls_df_ma_train = {}   # market-adjusted df
+bm_df_ma_train = {}   # market-adjusted df
 
 # betas (calculation using train set)
 for idx, anom in enumerate(ls_df_train):
@@ -188,12 +188,10 @@ for idx, anom in enumerate(ls_df_train):
 
 ls_df_ma_train = pd.DataFrame(ls_df_ma_train)
 
-
 # market-scaled bm_df (only train set)
 for idx, anom in enumerate(bm_df_train):
     bm_df_ma_train[bm_df_train.columns[idx]] = bm_df_train[anom] - betas[idx]*market_bm_train.bm
 
-# rescaled market returns
 bm_df_ma_train = pd.DataFrame(bm_df_ma_train)   
 
 #%%

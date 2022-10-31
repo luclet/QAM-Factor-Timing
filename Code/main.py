@@ -101,8 +101,10 @@ params = []
 ## Market regression
 X = sm.add_constant(np.log(market_bm_train[:-1]))
 #X = sm.add_constant(np.log(market_bm_aggr_train[:-1]))
+#XX = market_bm_train.to_numpy()
+#XX = np.log(market_bm_train)
 m1_est = sm.OLS(return_df_train_pca[1:,-1], X).fit()
-print(m1_est.summary())
+#print(m1_est.summary())
 
 
 ## PC1 regression   --> regressor: bm_i,t = q'_i * bm^F_i
@@ -239,11 +241,54 @@ y_test = return_df_test / return_df_test.shift(1) - 1
 y_test = return_df_test.iloc[2:,:] 
 
 # regression model
-x_acc_train = sm.add_constant(x_train['accruals'])  
-y_acc_train = list(y_train['accruals'])                                                      
-acc_train = sm.OLS(y_acc_train, x_acc_train).fit()
-print(acc_train.summary())
-print('\nR_squared: ',acc_train.rsquared)
+# x_acc_train = sm.add_constant(x_train['accruals'])  
+# #y_acc_train = list(y_train['accruals'])  
+# y_acc_train = return_df_train[['accruals']]
+# abc = y_acc_train.iloc[1: , :]
+# abcd = y_acc_train.iloc[:-1 , :]                                                                                                        
+# acc_train = sm.OLS(abcd, x_acc_train).fit()
+# print(acc_train.summary())
+# print('\nR_squared: ',acc_train.rsquared)
+
+#List of in sample R2s for all anomalies
+R2_List_IS = []
+for anom in x_train:
+    x_reg = sm.add_constant(x_train[anom])  
+    y_reg = return_df_train[[anom]]
+    y_reg = y_reg.iloc[1: , :]
+    y_reg = y_reg.iloc[:-1 , :]                                                                                                        
+    reg_train = sm.OLS(y_reg, x_reg).fit()
+    R2 = reg_train.rsquared
+    R2_List_IS.append(R2)
+
+#List of out of sample R2s for all anomalies
+R2_List_OOS = []
+for anom in x_test:
+    x_reg = sm.add_constant(x_test[anom])  
+    y_reg = return_df_test[[anom]]
+    y_reg = y_reg.iloc[1: , :]
+    y_reg = y_reg.iloc[:-1 , :]                                                                                                        
+    reg_test = sm.OLS(y_reg, x_reg).fit()
+    R2 = reg_test.rsquared
+    R2_List_OOS.append(R2)
+
+
+Anomalies = return_df.columns.tolist()
+R2_Table = [R2_List_IS, R2_List_OOS, Anomalies]
+R2_Table = pd.DataFrame(R2_Table).T
+R2_Table = R2_Table.set_index(2)
+R2_Table.columns = ['IS', 'OOS']
+R2_Table.index.name = 'Anomalies'
+
+
+#Constructing forecast errors
+fc_err = x_train.subtract(return_df_train, axis='columns', level=None, fill_value=None)
+fc_err = fc_err.iloc[1: , :]
+fc_err = fc_err.iloc[:-1 , :]
+
+#Constructing conditional covariance matrix of market and PC returns
+
+
 
 '''
 model = LinearRegression(fit_intercept=True)
