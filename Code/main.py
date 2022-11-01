@@ -224,6 +224,10 @@ for anom in pc_eigenv_df:
     new_estim = np.dot(output_df.iloc[0,1:], pc_eigenv_df[anom])
     new_estimates.append(new_estim)
 
+pc_eigenv_df.to_csv("pc_eigenv.csv")
+output_df.to_csv("output_df.csv")
+
+
 # x = % change in bm
 x_train = bm_df_train / bm_df_train.shift(1) - 1
 x_train = x_train.iloc[1:-1,:] 
@@ -272,7 +276,6 @@ for anom in x_test:
     R2 = reg_test.rsquared
     R2_List_OOS.append(R2)
 
-
 Anomalies = return_df.columns.tolist()
 R2_Table = [R2_List_IS, R2_List_OOS, Anomalies]
 R2_Table = pd.DataFrame(R2_Table).T
@@ -280,12 +283,33 @@ R2_Table = R2_Table.set_index(2)
 R2_Table.columns = ['IS', 'OOS']
 R2_Table.index.name = 'Anomalies'
 
+# aufsplitten nach faktoren
+# forecast errors per pc
+# matrix soll cov von pc returns und faktor returns haben => zeilen factors, spalten pcs und jeweils deren covs
+
 
 #Constructing forecast errors
-fc_err = x_train.subtract(return_df_train, axis='columns', level=None, fill_value=None)
-fc_err = fc_err.iloc[1: , :]
-fc_err = fc_err.iloc[:-1 , :]
+fc_err_train = x_train.subtract(return_df_train, axis='columns', level=None, fill_value=None)
+fc_err_train = fc_err_train.iloc[1: , :]
+fc_err_train = fc_err_train.iloc[:-1 , :]
 
+fc_err_test = x_test.subtract(return_df_test, axis='columns', level=None, fill_value=None)
+fc_err_test = fc_err_test.iloc[1: , :]
+fc_err_test = fc_err_test.iloc[:-1 , :]
+
+return_df_test_trimmed = return_df_test.iloc[1: , :]
+return_df_test_trimmed = return_df_test_trimmed.iloc[:-1 , :] 
+
+cov_df = [x_train, return_df_train, Anomalies]
+cov_df = pd.DataFrame(cov_df).T
+cov_df = cov_df.set_index(2)
+cov_df.columns = ['Predicted', 'Actual']
+cov_df.index.name = 'Anomalies'
+
+var_fc_err = fc_err_test.var()
+var_ret = return_df_test.var()
+Almost = var_fc_err.div(var_ret)
+AAlmost = Almost.sub(1)
 #Constructing conditional covariance matrix of market and PC returns
 
 
