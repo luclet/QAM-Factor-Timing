@@ -122,6 +122,10 @@ print('Dropping the following anomalies is b/m portfolios: ', bm_df.columns[bm_d
 ls_df = ls_df.dropna(axis='columns')
 bm_df = bm_df.dropna(axis='columns')
 
+#refit 
+ls_df.drop('dur', inplace=True, axis=1)
+ls_df.drop('inv', inplace=True, axis=1)
+bm_df.drop('ipo', inplace=True, axis=1)
 #%% COULD BE DELETED
 '''
 ### Market adjust data
