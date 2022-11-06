@@ -353,7 +353,7 @@ step5_bm_df_train = pd.DataFrame(step5_bm_df_train).set_index(bm_df_train.index[
 step5_bm_df_train['MKT'] = np.log(market_bm_train[:-1]) # correct?
 
 
-# modifie PC and MKT return df from pca
+# modify PC and MKT return df from pca
 step5_return_df_train_pca = pd.DataFrame(return_df_train_pca).iloc[1:,:].set_index(bm_df_train.index[1:])
 step5_return_df_train_pca.columns = step5_bm_df_train.columns
 
@@ -396,57 +396,115 @@ sum_weights_train = step5_weights_train.sum(axis=1)
 # rescale weights
 step5_weights_train_scaled = step5_weights_train.apply(lambda x: x/x.sum(), axis=1)
 
+#Return strategy and market
+step5_final_returns_train = np.multiply(step5_weights_train_scaled, step5_return_df_train_pca_adj)
+step5_sum_final_returns_train = step5_final_returns_train.sum(axis=1)
+step5_cumulative_market_returns = np.cumprod(1 + market_returns_train['ret'].values) - 1
+step5_cumulative_market_returns = pd.DataFrame(step5_cumulative_market_returns)
+step5_cumulative_market_returns = step5_cumulative_market_returns.head(-1)
+step5_cumulative_market_returns = step5_cumulative_market_returns.tail(-1)
+step5_cumulative_returns = np.cumprod(1 + step5_sum_final_returns_train.values) - 1
+step5_cumulative_returns = pd.DataFrame(step5_cumulative_returns)
+step5_cumulative_returns.index = step5_cumulative_market_returns.index
+
+#Plotting predicted vs market returns for whole strategy
+Returns_Graph = pd.concat([step5_cumulative_returns, step5_cumulative_market_returns], axis = 1)
+Returns_Graph.columns = ['Strategy', 'Market']
+Returns_Graph.index=step5_return_df_train_pca_adj.index
+from matplotlib import pyplot as plt
+plt.rcParams["figure.autolayout"] = True
+Returns_Graph.plot(figsize=(10,6),title='Strategy vs. Market Return in sample', xlabel = 'Date', ylabel = 'Return in %')
+
+step5_cumulative_market_returns.plot(figsize=(10,6),title='Cumulative Market Return in sample', xlabel = 'Date', ylabel = 'Return in %')
+market_returns_train.plot(figsize=(10,6),title='Monthly Market Returns in sample', xlabel = 'Date', ylabel = 'Return in %')
+
+#Plotting predicted vs actual PC returns
+#PC1
+PC_List = pd.DataFrame(columns = ['PC1','PC2', 'PC3', 'PC4', 'PC5',])
+
+for anom in PC_List:
+    
+    return_df_train_pca_adj = return_df_train_pca.head(-2)
+    return_df_train_pca_adj_cum = np.cumprod(1 + return_df_train_pca_adj[anom].values) - 1
+    return_df_train_pca_adj_cum = pd.DataFrame(return_df_train_pca_adj_cum)
+    return_df_train_pca_adj_cum.index = step5_predicted_ret_df_train.index
+    
+    step5_predicted_ret_df_train_cum = np.cumprod(1 + step5_predicted_ret_df_train[anom].values) - 1
+    step5_predicted_ret_df_train_cum = pd.DataFrame(step5_predicted_ret_df_train_cum)
+    step5_predicted_ret_df_train_cum.index = step5_predicted_ret_df_train.index
+    
+    PC_Graph = pd.concat([return_df_train_pca_adj_cum, step5_predicted_ret_df_train_cum], axis = 1)
+    PC_Graph.columns = ['Market', 'Strategy']
+    PC_Graph.index=step5_predicted_ret_df_train.index
+    
+    plt.rcParams["figure.autolayout"] = True
+    PC_Graph.plot(figsize=(10,6),title='PC Returns Actual vs. Predicted', xlabel = 'Date', ylabel = 'Return in %')
+    
+#Sharpe ratio of portfolio    
+
+#=> Plots müssen noch auf gesamte Zeitdauer erweitert werden
+#Sharpe und information ratio berechnen
+
+#Sharpe Ratio assuming a risk-free rate of 0
+Sharpe_Ratio = step5_sum_final_returns_train.mean() / step5_sum_final_returns_train.std()
+
+#Information Ratio
+return_df_train_adj = return_df_train.head(-2)
+Forecast_erros_train = step5_sum_final_returns_train.subtract(return_df_train_adj, axis = 1)
+Cumulative_return_market = step5_cumulative_market_returns.head(261)
+Cumulative_return_strategy = step5_cumulative_returns.head(261)
+#Information_Ratio_train = step5_cumulative_returns.subtract(step5_cumulative_market_returns, axis = 1) / Forecast_erros_train.std())
 
 
-### OOS
+# ### OOS
 
-step5_bm_df_test = {}
+# step5_bm_df_test = {}
 
-for idx, pc in enumerate(PCs):
-    step5_bm_df_test[pc] = np.dot(pc_eigenv_df.iloc[idx,:].values, bm_df_test.transpose())[:-1]
+# for idx, pc in enumerate(PCs):
+#     step5_bm_df_test[pc] = np.dot(pc_eigenv_df.iloc[idx,:].values, bm_df_test.transpose())[:-1]
 
-step5_bm_df_test = pd.DataFrame(step5_bm_df_test).set_index(bm_df_test.index[:-1])
+# step5_bm_df_test = pd.DataFrame(step5_bm_df_test).set_index(bm_df_test.index[:-1])
 
-step5_bm_df_test['MKT'] = np.log(market_bm_test[:-1]) # correct?
-
-
-# modifie PC and MKT return df from pca
-step5_return_df_test_pca = pd.DataFrame(return_df_test_pca).iloc[1:,:].set_index(bm_df_test.index[1:])
-step5_return_df_test_pca.columns = step5_bm_df_test.columns
+# step5_bm_df_test['MKT'] = np.log(market_bm_test[:-1]) # correct?
 
 
-# Calculate % change in bm
-step5_bmc_df_test = step5_bm_df_test / step5_bm_df_test.shift(1) - 1
-step5_bmc_df_test = step5_bmc_df_test.iloc[1:, :]
+# # modifie PC and MKT return df from pca
+# step5_return_df_test_pca = pd.DataFrame(return_df_test_pca).iloc[1:,:].set_index(bm_df_test.index[1:])
+# step5_return_df_test_pca.columns = step5_bm_df_test.columns
 
 
-# move columns MKT from output_df at the end
-output_df_new = output_df[['PC1','PC2', 'PC3', 'PC4', 'PC5', 'MKT']]
-
-# Multiply % change in bm with regression beta => gives % change in PC and MKT return
-step5_retc_df_test = np.multiply(step5_bmc_df_test, output_df_new.iloc[0,:])
-
-# Calculate predicted return: ret*(1+%change)
-step5_return_df_test_pca_adj = step5_return_df_test_pca.iloc[:-1,:]
-step5_predicted_ret_df_test= np.multiply(step5_return_df_test_pca_adj, 1+step5_retc_df_test)
-
-step5_predicted_ret_df_test.index = step5_return_df_test_pca.index[1:]
+# # Calculate % change in bm
+# step5_bmc_df_test = step5_bm_df_test / step5_bm_df_test.shift(1) - 1
+# step5_bmc_df_test = step5_bmc_df_test.iloc[1:, :]
 
 
-## Calculate forecast errors 
-step5_forecast_errors_test = abs(step5_predicted_ret_df_test - step5_return_df_test_pca.iloc[1:,:])
+# # move columns MKT from output_df at the end
+# output_df_new = output_df[['PC1','PC2', 'PC3', 'PC4', 'PC5', 'MKT']]
 
-## Calculate estimate of conditional Covariance matrix
-step5_cov_matrix_test = step5_predicted_ret_df_test.cov()   # conditional?
+# # Multiply % change in bm with regression beta => gives % change in PC and MKT return
+# step5_retc_df_test = np.multiply(step5_bmc_df_test, output_df_new.iloc[0,:])
 
-## Calculate portfolio weights
-step5_weights_test = np.dot(np.linalg.inv(step5_cov_matrix_test), step5_predicted_ret_df_test.transpose()).transpose()
-step5_weights_test = pd.DataFrame(step5_weights_test, index=step5_retc_df_test.index, columns=step5_retc_df_test.columns)
+# # Calculate predicted return: ret*(1+%change)
+# step5_return_df_test_pca_adj = step5_return_df_test_pca.iloc[:-1,:]
+# step5_predicted_ret_df_test= np.multiply(step5_return_df_test_pca_adj, 1+step5_retc_df_test)
 
-sum_weights_test = step5_weights_test.sum(axis=1)
+# step5_predicted_ret_df_test.index = step5_return_df_test_pca.index[1:]
 
-# rescale weights
-step5_weights_test_scaled = step5_weights_test.apply(lambda x: x/x.sum(), axis=1)
+
+# ## Calculate forecast errors 
+# step5_forecast_errors_test = abs(step5_predicted_ret_df_test - step5_return_df_test_pca.iloc[1:,:])
+
+# ## Calculate estimate of conditional Covariance matrix
+# step5_cov_matrix_test = step5_predicted_ret_df_test.cov()   # conditional?
+
+# ## Calculate portfolio weights
+# step5_weights_test = np.dot(np.linalg.inv(step5_cov_matrix_test), step5_predicted_ret_df_test.transpose()).transpose()
+# step5_weights_test = pd.DataFrame(step5_weights_test, index=step5_retc_df_test.index, columns=step5_retc_df_test.columns)
+
+# sum_weights_test = step5_weights_test.sum(axis=1)
+
+# # rescale weights
+# step5_weights_test_scaled = step5_weights_test.apply(lambda x: x/x.sum(), axis=1)
 
 
 
