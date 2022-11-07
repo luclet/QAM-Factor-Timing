@@ -177,53 +177,17 @@ market_bm_aggr_train = market_bm_aggr['1974-01-01':'1995-12-01']
 market_bm_aggr_test = market_bm_aggr['1996-01-01':'2017-12-01']
 
 
-
-
-#%%
-# betas and var estimated using train sample s.t. OOS statistics contain no look-ahead bias
-betas = []      # for each anomaly
-ls_df_ma_train = {}   # market-adjusted df
-bm_df_ma_train = {}   # market-adjusted df
-bm_df_ma = {} # market-adjusted df
-
-# betas (calculation using train set)
-for idx, anom in enumerate(ls_df_train):
-    beta = ls_df_train[anom].cov(market_returns_train.ret)/market_returns_train.ret.var()
-    betas.append(beta)
-
-# market-scaled ls_df (only train set)
-for idx, anom in enumerate(ls_df_train):
-    ls_df_ma_train[ls_df_train.columns[idx]] = ls_df_train[anom] - betas[idx]*market_returns_train.ret
-
-ls_df_ma_train = pd.DataFrame(ls_df_ma_train)
-
-# market-scaled bm_df (only train set)
-for idx, anom in enumerate(bm_df_train):
-    bm_df_ma_train[bm_df_train.columns[idx]] = bm_df_train[anom] - betas[idx]*market_bm_train.bm
-
-bm_df_ma_train = pd.DataFrame(bm_df_ma_train)
-
-# market-scaled bm_df (entire set)
-for idx, anom in enumerate(bm_df):
-    bm_df_ma[bm_df.columns[idx]] = bm_df[anom] - betas[idx]*market_bm.bm
-
-bm_df_ma = pd.DataFrame(bm_df_ma)
-
-
 #%%
 ### Rescale data
 # rescale market-adj returns and bm ratios s.t. they have equal variance across anomalies
 # done by dividing returns and bm for each anomaly by its std.deviation s.t. all std.dev are 1
 # only train set
 
-for anom in ls_df_ma_train:
-    ls_df_ma_train[anom] = ls_df_ma_train[anom] / ls_df_ma_train[anom].var()**(1/2)
+for anom in ls_df_train:
+    ls_df_train[anom] = ls_df_train[anom] / ls_df_train[anom].var()**(1/2)
 
-for anom in bm_df_ma_train:
-    bm_df_ma_train[anom] = bm_df_ma_train[anom] / bm_df_ma_train[anom].var()**(1/2)
-    
-for anom in bm_df_ma:
-    bm_df_ma[anom] = bm_df_ma[anom] / bm_df_ma[anom].var()**(1/2)
+for anom in bm_df_train:
+    bm_df_train[anom] = bm_df_train[anom] / bm_df_train[anom].var()**(1/2)
 
 '''ich glaube das muss man nicht
 market_returns_train = market_returns_train / market_returns_train.var()**(1/2)
@@ -232,10 +196,9 @@ market_bm_train = market_bm_train / market_bm_train.var()**(1/2)
 
 
 # Final dataframes
-ls_df_ma_train 
-ls_df_test
-bm_df_ma
-bm_df_ma_train 
+ls_df_train 
+ls_df_test  
+bm_df_train 
 bm_df_test  
 market_returns_train 
 market_returns_test 

@@ -23,21 +23,20 @@ warnings.filterwarnings("ignore")
 
 # reading the cleaned data form Data_Cleaning.py
 
-return_df_train = data.ls_df_ma_train
+return_df_train = data.ls_df_train
 return_df_test = data.ls_df_test
 return_df_extra = data.ls_df_extra
 
 frames = [return_df_train, return_df_test, return_df_extra]
 return_df = pd.concat(frames)
 
-bm_df_train = data.bm_df_ma_train
+bm_df_train = data.bm_df_train
 bm_df_test = data.bm_df_test
-bm_df = data.bm_df_ma
+bm_df = data.bm_df
 
 market_returns = data.market_returns
 market_returns_train = data.market_returns_train
 market_returns_test = data.market_returns_test
-
 market_bm_train = data.market_bm_train
 market_bm_test = data.market_bm_test
 
@@ -96,7 +95,7 @@ return_df_test_pca['MKT'] = market_returns_test
 
 
 
-# return_df_t columns: PC1, PC2, PC3, PC4, MKT
+# return_df_t columns: PC1, PC2, PC3, PC4, PC5, MKT
 
 #%%
 ### 3. Prediciting the large PCs of anomaly returns (Predictive Regression)
@@ -188,7 +187,7 @@ print(bm_pc5_est_train.summary())
 
 
 # collect parameters
-regressions = [m1_est, bm_pc1_est_train, bm_pc2_est_train, bm_pc3_est_train, bm_pc4_est_train]
+regressions = [m1_est, bm_pc1_est_train, bm_pc2_est_train, bm_pc3_est_train, bm_pc4_est_train, bm_pc5_est_train]
 output_df  = pd.DataFrame(index =['Own bm','Std. dev.', 'p-value', 'R_squared'], columns = ['MKT', 'PC1', 'PC2', 'PC3', 'PC4', 'PC5'])
 
 for idx, regr in enumerate(regressions):
@@ -378,7 +377,7 @@ step5_cumulative_market_returns.plot(figsize=(10,6),title='Cumulative Market Ret
 market_returns.plot(figsize=(10,6),title='Monthly Market Returns in sample', xlabel = 'Date', ylabel = 'Return in %')
 
 #Plotting predicted vs actual PC returns
-PC_List = pd.DataFrame(columns = ['PC1','PC2', 'PC3', 'PC4', 'PC5'])
+PC_List = pd.DataFrame(columns = ['PC1','PC2', 'PC3', 'PC4', 'PC5',])
 return_df_pca = pd.concat([return_df_train_pca, return_df_test_pca], axis = 0)
 
 for anom in PC_List:
@@ -493,7 +492,7 @@ step5_cumulative_market_returns_test.plot(figsize=(10,6),title='Cumulative Marke
 market_returns_test.plot(figsize=(10,6),title='Monthly Market Returns in sample', xlabel = 'Date', ylabel = 'Return in %')
 
 #Plotting predicted vs actual PC returns
-PC_List = pd.DataFrame(columns = ['PC1','PC2', 'PC3', 'PC4', 'PC5'])
+PC_List = pd.DataFrame(columns = ['PC1','PC2', 'PC3', 'PC4', 'PC5',])
 
 for anom in PC_List:
     

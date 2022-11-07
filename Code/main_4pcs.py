@@ -37,7 +37,6 @@ bm_df = data.bm_df_ma
 market_returns = data.market_returns
 market_returns_train = data.market_returns_train
 market_returns_test = data.market_returns_test
-
 market_bm_train = data.market_bm_train
 market_bm_test = data.market_bm_test
 
@@ -56,7 +55,7 @@ return_df_test_pca = sc.transform(return_df_test)
 
 
 # Applying PCA function on training and testing set
-n_pc = 5
+n_pc = 4
 pca = PCA(n_components = n_pc)
 return_df_train_pca = pca.fit_transform(return_df_train_pca)
 return_df_test_pca = pca.transform(return_df_test_pca)
@@ -82,11 +81,11 @@ print(pc_eigenv_df)
 ##### NEW ######## ACTUALLY WERTE ZIEMLICH ÄHNLICH OB SO ODER WIE OBEN ZEILE 59
 return_df_train_pca = pd.DataFrame(np.dot(pc_eigenv_df, return_df_train.transpose()).transpose())
 return_df_train_pca = return_df_train_pca.set_index(return_df_train.index)
-return_df_train_pca.columns = ['PC1', 'PC2', 'PC3', 'PC4', 'PC5']
+return_df_train_pca.columns = ['PC1', 'PC2', 'PC3', 'PC4']
 
 return_df_test_pca = pd.DataFrame(np.dot(pc_eigenv_df, return_df_test.transpose()).transpose())
 return_df_test_pca = return_df_test_pca.set_index(return_df_test.index)
-return_df_test_pca.columns = ['PC1', 'PC2', 'PC3', 'PC4', 'PC5']
+return_df_test_pca.columns = ['PC1', 'PC2', 'PC3', 'PC4']
 ########################
 
 
@@ -174,22 +173,11 @@ bm_pc4_est_test = sm.OLS(Y_ret_pc4_test, X_bm_pc4_test).fit()
 print(bm_pc4_est_train.summary())
 
 
-## PC5 regression   
-X_bm_pc5_train = sm.add_constant(np.dot(pc_eigenv_df.iloc[4,:].values, bm_df_train.transpose())[:-1])  # starting at 0 (t) and deleting last value
-X_bm_pc5_test = sm.add_constant(np.dot(pc_eigenv_df.iloc[4,:].values, bm_df_test.transpose())[:-1])  # starting at 0 (t) and deleting last value
-
-Y_ret_pc5_train = return_df_train_pca.iloc[1:,4]                                                                 # starting at 1 (t+1)
-Y_ret_pc5_test = return_df_test_pca.iloc[1:,4]                                                                 # starting at 1 (t+1)
-
-bm_pc5_est_train = sm.OLS(Y_ret_pc5_train, X_bm_pc5_train).fit()
-bm_pc5_est_test = sm.OLS(Y_ret_pc5_test, X_bm_pc5_test).fit()
-print(bm_pc5_est_train.summary())
-
 
 
 # collect parameters
 regressions = [m1_est, bm_pc1_est_train, bm_pc2_est_train, bm_pc3_est_train, bm_pc4_est_train]
-output_df  = pd.DataFrame(index =['Own bm','Std. dev.', 'p-value', 'R_squared'], columns = ['MKT', 'PC1', 'PC2', 'PC3', 'PC4', 'PC5'])
+output_df  = pd.DataFrame(index =['Own bm','Std. dev.', 'p-value', 'R_squared'], columns = ['MKT', 'PC1', 'PC2', 'PC3', 'PC4'])
 
 for idx, regr in enumerate(regressions):
     output_df.iloc[0, idx] = regr.params[1]
@@ -301,7 +289,7 @@ AAlmost = Almost.sub(1)
 ## Calculate component means E_t[Z_{t+1}]
 
 # Calculate own bm ratio timeseries for each PCs and MKT and create df
-PCs = ['PC1', 'PC2', 'PC3', 'PC4', 'PC5']
+PCs = ['PC1', 'PC2', 'PC3', 'PC4']
 bm_df_step5 = bm_df['1974-01-01':'2017-12-01']
 step5_bm_df = {}
 
@@ -322,7 +310,7 @@ step5_bmc_df = step5_bm_df / step5_bm_df.shift(1) - 1
 step5_bmc_df = step5_bmc_df.iloc[1:, :]
 
 # move columns MKT from output_df at the end
-output_df_new = output_df[['PC1','PC2', 'PC3', 'PC4', 'PC5', 'MKT']]
+output_df_new = output_df[['PC1','PC2', 'PC3', 'PC4', 'MKT']]
 
 # Multiply % change in bm with regression beta => gives % change in PC and MKT return
 step5_retc_df = np.multiply(step5_bmc_df, output_df_new.iloc[0,:])
@@ -378,7 +366,7 @@ step5_cumulative_market_returns.plot(figsize=(10,6),title='Cumulative Market Ret
 market_returns.plot(figsize=(10,6),title='Monthly Market Returns in sample', xlabel = 'Date', ylabel = 'Return in %')
 
 #Plotting predicted vs actual PC returns
-PC_List = pd.DataFrame(columns = ['PC1','PC2', 'PC3', 'PC4', 'PC5'])
+PC_List = pd.DataFrame(columns = ['PC1','PC2', 'PC3', 'PC4'])
 return_df_pca = pd.concat([return_df_train_pca, return_df_test_pca], axis = 0)
 
 for anom in PC_List:
@@ -441,7 +429,7 @@ step5_bmc_df_test = step5_bm_df_test / step5_bm_df_test.shift(1) - 1
 step5_bmc_df_test = step5_bmc_df_test.iloc[1:, :]
 
 # move columns MKT from output_df at the end
-output_df_new = output_df[['PC1','PC2', 'PC3', 'PC4', 'PC5', 'MKT']]
+output_df_new = output_df[['PC1','PC2', 'PC3', 'PC4', 'MKT']]
 
 # Multiply % change in bm with regression beta => gives % change in PC and MKT return
 step5_retc_df_test = np.multiply(step5_bmc_df_test, output_df_new.iloc[0,:])
@@ -493,7 +481,7 @@ step5_cumulative_market_returns_test.plot(figsize=(10,6),title='Cumulative Marke
 market_returns_test.plot(figsize=(10,6),title='Monthly Market Returns in sample', xlabel = 'Date', ylabel = 'Return in %')
 
 #Plotting predicted vs actual PC returns
-PC_List = pd.DataFrame(columns = ['PC1','PC2', 'PC3', 'PC4', 'PC5'])
+PC_List = pd.DataFrame(columns = ['PC1','PC2', 'PC3', 'PC4'])
 
 for anom in PC_List:
     
