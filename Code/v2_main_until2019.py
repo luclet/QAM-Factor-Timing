@@ -6,7 +6,7 @@ Authors: Lucas Letulé, Jonas Neller, Lorena Tassone
 '''
 #%% 
 
-import Data_Cleaning as data 
+import Data_Cleaning_until2019 as data
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
@@ -32,19 +32,21 @@ return_df = pd.concat(frames)
 
 bm_df_train = data.bm_df_ma_train
 bm_df_test = data.bm_df_test
+bm_df_extra = data.bm_df_extra
 bm_df = data.bm_df_ma
 
 market_returns = data.market_returns
 market_returns_train = data.market_returns_train
 market_returns_test = data.market_returns_test
+market_returns_extra = data.market_returns_extra
 
 market_bm = data.market_bm
 market_bm_train = data.market_bm_train
 market_bm_test = data.market_bm_test
+market_bm_extra = data.market_bm_extra
 
 market_bm_aggr_train = data.market_bm_aggr_train
 market_bm_aggr_test = data.market_bm_aggr_test
-
 
 #%%
 ### 2. Dominant components of factors
@@ -88,13 +90,17 @@ return_df_train_pca.columns = ['PC1', 'PC2', 'PC3', 'PC4', 'PC5']
 return_df_test_pca = pd.DataFrame(np.dot(pc_eigenv_df, return_df_test.transpose()).transpose())
 return_df_test_pca = return_df_test_pca.set_index(return_df_test.index)
 return_df_test_pca.columns = ['PC1', 'PC2', 'PC3', 'PC4', 'PC5']
+
+return_df_extra_pca = pd.DataFrame(np.dot(pc_eigenv_df, return_df_extra.transpose()).transpose())
+return_df_extra_pca = return_df_extra_pca.set_index(return_df_extra.index)
+return_df_extra_pca.columns = ['PC1', 'PC2', 'PC3', 'PC4', 'PC5']
 ########################
 
 
 # Including market pf as pricing factor
 return_df_train_pca['MKT'] = market_returns_train
 return_df_test_pca['MKT'] = market_returns_test
-
+return_df_extra_pca['MKT'] = market_returns_extra
 
 
 #%%
@@ -201,7 +207,7 @@ print(output_df)
 
 
 #%%
-### 4. Prediciting individual factors
+### 4. Predicting individual factors
 
 # regression estimates * factor pc loadings
 new_estimates = []
@@ -216,15 +222,15 @@ for anom in pc_eigenv_df:
 delta_bm_train = bm_df_train / bm_df_train.shift(1) - 1
 delta_bm_train = delta_bm_train.iloc[1:-1,:]                      # % veränderung bm
 
-delta_bm_test = bm_df_test / bm_df_test.shift(1) - 1 
-delta_bm_test = delta_bm_test.iloc[1:-1,:]
+delta_bm_extra = bm_df_extra / bm_df_extra.shift(1) - 1 
+delta_bm_extra = delta_bm_extra.iloc[1:-1,:]
 
 
 #Calculating predicted change in returns for train and test
 delta_predict_ret_train = np.multiply(delta_bm_train, new_estimates)     # % veränderung anomaly return
-delta_predict_ret_test = np.multiply(delta_bm_test, new_estimates) 
+delta_predict_ret_extra = np.multiply(delta_bm_extra, new_estimates) 
 delta_predict_ret_train.index = bm_df_train[2:].index
-delta_predict_ret_test.index = bm_df_test[2:].index
+delta_predict_ret_extra.index = bm_df_extra[2:].index
 
 
 # #Calculate change in factor returns for train and test
@@ -244,16 +250,16 @@ return_df_train_adj = return_df_train_adj.tail(-1)
 step4_predicted_ret_train = np.multiply(return_df_train_adj, 1+delta_predict_ret_train)
 step4_predicted_ret_train.index = bm_df_train[2:].index
 
-return_df_test_adj = return_df_test.head(-1)
-return_df_test_adj = return_df_test_adj.tail(-1)
-step4_predicted_ret_test = np.multiply(return_df_test_adj, 1+delta_predict_ret_test)
-step4_predicted_ret_test.index = bm_df_test[2:].index
+return_df_extra_adj = return_df_extra.head(-1)
+return_df_extra_adj = return_df_extra_adj.tail(-1)
+step4_predicted_ret_extra = np.multiply(return_df_extra_adj, 1+delta_predict_ret_extra)
+step4_predicted_ret_extra.index = bm_df_extra[2:].index
 
 
 step4_return_df_train = return_df_train.tail(-2)
-step4_return_df_test = return_df_test.tail(-2)
+step4_return_df_extra = return_df_extra.tail(-2)
 step4_return_df_train.index = step4_predicted_ret_train.index
-step4_return_df_test.index = step4_predicted_ret_test.index
+step4_return_df_extra.index = step4_predicted_ret_extra.index
 
 
 #List of in sample R2s for all anomalies
@@ -267,11 +273,11 @@ for anom in step4_predicted_ret_train:
 
 #List of out of sample R2s for all anomalies
 R2_List_OOS = []
-for anom in step4_predicted_ret_test:
-    x_reg = sm.add_constant(step4_predicted_ret_test[anom].reset_index(drop=True) )  
-    y_reg = step4_return_df_test[[anom]].reset_index(drop=True)                                                                                                    
-    reg_test = sm.OLS(y_reg, x_reg).fit()
-    R2 = reg_test.rsquared
+for anom in step4_predicted_ret_extra:
+    x_reg = sm.add_constant(step4_predicted_ret_extra[anom].reset_index(drop=True) )  
+    y_reg = step4_return_df_extra[[anom]].reset_index(drop=True)                                                                                                    
+    reg_extra = sm.OLS(y_reg, x_reg).fit()
+    R2 = reg_extra.rsquared
     R2_List_OOS.append(R2)
 
 anomalies = return_df.columns.tolist()
@@ -316,6 +322,7 @@ AAlmost = Almost.sub(1)
 
 
 
+
 #%%
 #### 5. Optimal factor timing portfolio
 
@@ -323,9 +330,10 @@ AAlmost = Almost.sub(1)
 
 ## Calculate component means E_t[Z_{t+1}]
 
+
 # Calculate own bm ratio timeseries for each PCs and MKT and create df
 PCs = ['PC1', 'PC2', 'PC3', 'PC4', 'PC5']
-bm_df_step5 = bm_df['1974-01-01':'2017-12-01']
+bm_df_step5 = bm_df
 step5_bm_df = {}
 
 for idx, pc in enumerate(PCs):
@@ -334,7 +342,8 @@ for idx, pc in enumerate(PCs):
 step5_bm_df = pd.DataFrame(step5_bm_df).set_index(bm_df_step5.index[:-1])
 
 step5_bm_df['MKT'] = np.log(market_bm[:-1]) # correct?
-step5_return_df_pca = pd.concat([return_df_train_pca, return_df_test_pca], axis=0)
+step5_return_df_pca_list = [return_df_train_pca, return_df_test_pca, return_df_extra_pca]
+step5_return_df_pca = pd.concat(step5_return_df_pca_list)
 
 
 # modify PC and MKT return df from pca
@@ -354,9 +363,11 @@ output_df_new = output_df[['PC1','PC2', 'PC3', 'PC4', 'PC5', 'MKT']]
 # Multiply % change in bm with regression beta => gives % change in PC and MKT return
 step5_retc_df = np.multiply(step5_bmc_df, output_df_new.iloc[0,:])
 
+
 # Calculate predicted return: ret*(1+%change)
-step5_return_df_pca_adj = step5_return_df_pca.iloc[:-1,:] #cut off last line
+step5_return_df_pca_adj = step5_return_df_pca.iloc[:-1,:]
 step5_predicted_ret_df = np.multiply(step5_return_df_pca_adj, 1+step5_retc_df)
+
 step5_predicted_ret_df.index = step5_return_df_pca.index[1:]
 
 
@@ -399,9 +410,10 @@ step5_cumulative_returns.index = step5_cumulative_market_returns.index
 
 #Sharpe Ratio assuming a risk-free rate of 0
 Sharpe_Ratio_prelim = np.dot(step5_final_returns.mean().transpose(), step5_cov_matrix)
-return_df_pca = pd.concat([return_df_train_pca, return_df_test_pca], axis = 0)
+return_df_pca = step5_return_df_pca
 return_df_pca_adj = return_df_pca.tail(-2)
 Sharpe_Ratio = np.dot(Sharpe_Ratio_prelim, return_df_pca_adj.mean())
+
 
 #Information Ratio
 step5_excess_returns = step5_cumulative_returns.subtract(step5_cumulative_market_returns)
@@ -422,24 +434,24 @@ Information_Ratio = step5_excess_returns_cum.div(Forecast_errors.std())
 
 # Calculate own bm ratio timeseries for each PCs and MKT and create df
 
-step5_bm_df_test = {}
+step5_bm_df_extra = {}
 
 for idx, pc in enumerate(PCs):
-    step5_bm_df_test[pc] = np.dot(pc_eigenv_df.iloc[idx,:].values, bm_df_test.transpose())[:-1]
+    step5_bm_df_extra[pc] = np.dot(pc_eigenv_df.iloc[idx,:].values, bm_df_extra.transpose())[:-1]
 
-step5_bm_df_test = pd.DataFrame(step5_bm_df_test).set_index(bm_df_test.index[:-1])
+step5_bm_df_extra = pd.DataFrame(step5_bm_df_extra).set_index(bm_df_extra.index[:-1])
 
-step5_bm_df_test['MKT'] = np.log(market_bm_test[:-1]) # correct?
+step5_bm_df_extra['MKT'] = np.log(market_bm_extra[:-1]) # correct?
 
 
 # modify PC and MKT return df from pca
-step5_return_df_test_pca = pd.DataFrame(return_df_test_pca).iloc[1:,:].set_index(bm_df_test.index[1:])
-step5_return_df_test_pca.columns = step5_bm_df_test.columns
+step5_return_df_extra_pca = pd.DataFrame(return_df_extra_pca).iloc[1:,:].set_index(bm_df_extra.index[1:])
+step5_return_df_extra_pca.columns = step5_bm_df_extra.columns
 
 
 # Calculate % change in bm
-step5_bmc_df_test = step5_bm_df_test / step5_bm_df_test.shift(1) - 1
-step5_bmc_df_test = step5_bmc_df_test.iloc[1:, :]
+step5_bmc_df_extra = step5_bm_df_extra / step5_bm_df_extra.shift(1) - 1
+step5_bmc_df_extra = step5_bmc_df_extra.iloc[1:, :]
 
 
 # move columns MKT from output_df at the end
@@ -447,69 +459,68 @@ output_df_new = output_df[['PC1','PC2', 'PC3', 'PC4', 'PC5', 'MKT']]
 
 
 # Multiply % change in bm with regression beta => gives % change in PC and MKT return
-step5_retc_df_test = np.multiply(step5_bmc_df_test, output_df_new.iloc[0,:])
+step5_retc_df_extra = np.multiply(step5_bmc_df_extra, output_df_new.iloc[0,:])
 
 
 # Calculate predicted return: ret*(1+%change)
-step5_return_df_test_pca_adj = step5_return_df_test_pca.iloc[:-1,:]
-step5_predicted_ret_df_test= np.multiply(step5_return_df_test_pca_adj, 1+step5_retc_df_test)
+step5_return_df_extra_pca_adj = step5_return_df_extra_pca.iloc[:-1,:]
+step5_predicted_ret_df_extra= np.multiply(step5_return_df_extra_pca_adj, 1+step5_retc_df_extra)
 
-step5_predicted_ret_df_test.index = step5_return_df_test_pca.index[1:]
+
+step5_predicted_ret_df_extra.index = step5_return_df_extra_pca.index[1:]
 
 
 # Calculate forecast errors 
-step5_forecast_errors_test = abs(step5_predicted_ret_df_test - step5_return_df_test_pca.iloc[1:,:])
+step5_forecast_errors_extra = abs(step5_predicted_ret_df_extra - step5_return_df_extra_pca.iloc[1:,:])
 
 
 # Calculate estimate of conditional Covariance matrix
-step5_cov_matrix_test = step5_predicted_ret_df_test.cov()   # conditional?
+step5_cov_matrix_extra = step5_predicted_ret_df_extra.cov()   # conditional?
 
 
 # Calculate portfolio weights
-step5_weights_test = np.dot(np.linalg.inv(step5_cov_matrix_test), step5_predicted_ret_df_test.transpose()).transpose()
-step5_weights_test = pd.DataFrame(step5_weights_test, index=step5_retc_df_test.index, columns=step5_retc_df_test.columns)
+step5_weights_extra = np.dot(np.linalg.inv(step5_cov_matrix_extra), step5_predicted_ret_df_extra.transpose()).transpose()
+step5_weights_extra = pd.DataFrame(step5_weights_extra, index=step5_retc_df_extra.index, columns=step5_retc_df_extra.columns)
 
-sum_weights_test = step5_weights_test.sum(axis=1)
+sum_weights_extra = step5_weights_extra.sum(axis=1)
 
 
 # rescale weights
-step5_weights_test_scaled = step5_weights_test.apply(lambda x: x/x.sum(), axis=1)
+step5_weights_extra_scaled = step5_weights_extra.apply(lambda x: x/x.sum(), axis=1)
 
 
 #Return strategy and market
-step5_final_returns_test = np.multiply(step5_weights_test_scaled, step5_return_df_test_pca_adj)
-step5_sum_final_returns_test = step5_final_returns_test.sum(axis=1)
-step5_sum_final_returns_test = step5_sum_final_returns_test.to_frame('ret')
+step5_final_returns_extra = np.multiply(step5_weights_extra_scaled, step5_return_df_extra_pca_adj)
+step5_sum_final_returns_extra = step5_final_returns_extra.sum(axis=1)
+step5_sum_final_returns_extra = step5_sum_final_returns_extra.to_frame('ret')
 
-step5_cumulative_market_returns_test = np.cumprod(1 + market_returns_test['ret'].values) - 1
-step5_cumulative_market_returns_test = pd.DataFrame(step5_cumulative_market_returns_test)
-step5_cumulative_market_returns_test = step5_cumulative_market_returns_test.head(-1)
-step5_cumulative_market_returns_test = step5_cumulative_market_returns_test.tail(-1)
-step5_cumulative_market_returns_test.index = step5_final_returns_test.index
+step5_cumulative_market_returns_extra = np.cumprod(1 + market_returns_extra['ret'].values) - 1
+step5_cumulative_market_returns_extra = pd.DataFrame(step5_cumulative_market_returns_extra)
+step5_cumulative_market_returns_extra = step5_cumulative_market_returns_extra.head(-1)
+step5_cumulative_market_returns_extra = step5_cumulative_market_returns_extra.tail(-1)
+step5_cumulative_market_returns_extra.index = step5_final_returns_extra.index
 
+step5_cumulative_returns_extra = np.cumprod(1 + step5_sum_final_returns_extra.values) - 1
+step5_cumulative_returns_extra = pd.DataFrame(step5_cumulative_returns_extra)
+step5_cumulative_returns_extra.index = step5_cumulative_market_returns_extra.index
 
-step5_cumulative_returns_test = np.cumprod(1 + step5_sum_final_returns_test.values) - 1
-step5_cumulative_returns_test = pd.DataFrame(step5_cumulative_returns_test)
-step5_cumulative_returns_test.index = step5_cumulative_market_returns_test.index
-    
 
 #Sharpe Ratio assuming a risk-free rate of 0
-return_df_test_pca_adj = return_df_test_pca.tail(-2)
-Sharpe_Ratio_prelim_test = np.dot(step5_final_returns_test.mean().transpose(), step5_cov_matrix_test)
-Sharpe_Ratio_test = np.dot(Sharpe_Ratio_prelim_test, return_df_test_pca_adj.mean())
+return_df_extra_pca_adj = return_df_extra_pca.tail(-2)
+Sharpe_Ratio_prelim_extra = np.dot(step5_final_returns_extra.mean().transpose(), step5_cov_matrix_extra)
+Sharpe_Ratio_test = np.dot(Sharpe_Ratio_prelim_extra, return_df_extra_pca_adj.mean())
 
 
 #Information Ratio
-step5_excess_returns_test = step5_cumulative_returns_test.subtract(step5_cumulative_market_returns_test)
-step5_excess_returns_cum_test = step5_cumulative_returns_test.subtract(step5_cumulative_market_returns_test)
-step5_excess_returns_cum_test = step5_excess_returns.iloc[261]
-step5_excess_returns_cum_test = step5_excess_returns_cum_test.to_frame('ret')
-market_returns_test_adj = market_returns_test.tail(-2)
-market_returns_test_adj.index = step5_final_returns_test.index
+step5_excess_returns_extra = step5_cumulative_returns_extra.subtract(step5_cumulative_market_returns_extra)
+step5_excess_returns_cum_extra = step5_cumulative_returns_extra.subtract(step5_cumulative_market_returns_extra)
+step5_excess_returns_cum_extra = step5_excess_returns.iloc[261]
+step5_excess_returns_cum_extra = step5_excess_returns_cum_extra.to_frame('ret')
+market_returns_extra_adj = market_returns_extra.tail(-2)
+market_returns_extra_adj.index = step5_final_returns_extra.index
 
-Forecast_errors_test = step5_sum_final_returns_test.subtract(market_returns_test_adj, axis = 1)
-Information_Ratio_test = step5_excess_returns_cum_test.div(Forecast_errors_test.std())
-
+Forecast_errors_extra = step5_sum_final_returns_extra.subtract(market_returns_extra_adj, axis = 1)
+Information_Ratio_extra = step5_excess_returns_cum_extra.div(Forecast_errors_extra.std())
 
 
 ##################### Plots #####################
@@ -517,12 +528,11 @@ from matplotlib import pyplot as plt
 
 #Plotting predicted vs actual PC returns IS & OOS
 PC_List = pd.DataFrame(columns = ['PC1','PC2', 'PC3', 'PC4', 'PC5'])
-return_df_pca = pd.concat([return_df_train_pca, return_df_test_pca], axis = 0)
+return_df_pca_adj_plot = return_df_pca.tail(-1)
 
 for anom in PC_List:
     
-    return_df_pca_adj = return_df_pca.tail(-2)
-    return_df_pca_adj_cum = np.cumprod(1 + return_df_pca_adj[anom].values) - 1
+    return_df_pca_adj_cum = np.cumprod(1 + return_df_pca_adj_plot[anom].values) - 1
     return_df_pca_adj_cum = pd.DataFrame(return_df_pca_adj_cum)
     return_df_pca_adj_cum.index = step5_predicted_ret_df.index
     
@@ -530,11 +540,11 @@ for anom in PC_List:
     step5_predicted_ret_df_cum = pd.DataFrame(step5_predicted_ret_df_cum)
     step5_predicted_ret_df_cum.index = step5_predicted_ret_df.index
     
-    step5_predicted_ret_df_test_cum = np.cumprod(1 + step5_predicted_ret_df_test[anom].values) - 1
-    step5_predicted_ret_df_test_cum = pd.DataFrame(step5_predicted_ret_df_test_cum)
-    step5_predicted_ret_df_test_cum.index = step5_predicted_ret_df_test.index
+    step5_predicted_ret_df_extra_cum = np.cumprod(1 + step5_predicted_ret_df_extra[anom].values) - 1
+    step5_predicted_ret_df_extra_cum = pd.DataFrame(step5_predicted_ret_df_extra_cum)
+    step5_predicted_ret_df_extra_cum.index = step5_predicted_ret_df_extra.index
     
-    PC_Graph_list = [return_df_pca_adj_cum, step5_predicted_ret_df_cum, step5_predicted_ret_df_test_cum]
+    PC_Graph_list = [return_df_pca_adj_cum, step5_predicted_ret_df_cum, step5_predicted_ret_df_extra_cum]
     PC_Graph = pd.concat(PC_Graph_list, axis=1)
     PC_Graph.columns = ['Market', 'Strategy IS', 'Strategy OOS']
     PC_Graph.index=step5_predicted_ret_df.index
@@ -544,14 +554,14 @@ for anom in PC_List:
 
 
 #Plotting predicted vs market returns for whole strategy
-Returns_Graph_list = [step5_cumulative_returns, step5_cumulative_market_returns, step5_cumulative_returns_test]
+Returns_Graph_list = [step5_cumulative_returns, step5_cumulative_market_returns, step5_cumulative_returns_extra]
 Returns_Graph = pd.concat(Returns_Graph_list, axis=1)
 Returns_Graph.columns = ['Strategy IS', 'Market', 'Strategy OOS']
 plt.rcParams["figure.autolayout"] = True
 Returns_Graph.plot(figsize=(10,6),title='Strategy vs. Market Return', xlabel = 'Date', ylabel = 'Return in %')
 
 #Plotting predicted vs market returns only OOS
-Returns_Graph_list = [step5_cumulative_market_returns_test, step5_cumulative_returns_test]
+Returns_Graph_list = [step5_cumulative_market_returns_extra, step5_cumulative_returns_extra]
 Returns_Graph = pd.concat(Returns_Graph_list, axis=1)
 Returns_Graph.columns = ['Market', 'Strategy OOS']
 plt.rcParams["figure.autolayout"] = True
@@ -561,9 +571,6 @@ Returns_Graph.plot(figsize=(10,6),title='Strategy vs. Market Return OOS', xlabel
 step5_cumulative_market_returns.columns = ['ret']
 step5_cumulative_market_returns.plot(figsize=(10,6),title='Cumulative Market Return in sample', xlabel = 'Date', ylabel = 'Return in %')
 market_returns.plot(figsize=(10,6),title='Monthly Market Returns in sample', xlabel = 'Date', ylabel = 'Return in %')
-
-
-
 
 
 

@@ -6,7 +6,7 @@ Authors: Lucas Letulé, Jonas Neller, Lorena Tassone
 '''
 #%% 
 
-import Data_Cleaning as data 
+import Data_Cleaning_volatility as data 
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
@@ -30,13 +30,14 @@ return_df_extra = data.ls_df_extra
 frames = [return_df_train, return_df_test, return_df_extra]
 return_df = pd.concat(frames)
 
-bm_df_train = data.bm_df_train
+bm_df_train = data.bm_df_ma_train
 bm_df_test = data.bm_df_test
-bm_df = data.bm_df
+bm_df = data.bm_df_ma
 
 market_returns = data.market_returns
 market_returns_train = data.market_returns_train
 market_returns_test = data.market_returns_test
+
 market_bm_train = data.market_bm_train
 market_bm_test = data.market_bm_test
 
@@ -183,7 +184,6 @@ Y_ret_pc5_test = return_df_test_pca.iloc[1:,4]                                  
 bm_pc5_est_train = sm.OLS(Y_ret_pc5_train, X_bm_pc5_train).fit()
 bm_pc5_est_test = sm.OLS(Y_ret_pc5_test, X_bm_pc5_test).fit()
 print(bm_pc5_est_train.summary())
-
 
 
 # collect parameters
@@ -377,7 +377,7 @@ step5_cumulative_market_returns.plot(figsize=(10,6),title='Cumulative Market Ret
 market_returns.plot(figsize=(10,6),title='Monthly Market Returns in sample', xlabel = 'Date', ylabel = 'Return in %')
 
 #Plotting predicted vs actual PC returns
-PC_List = pd.DataFrame(columns = ['PC1','PC2', 'PC3', 'PC4', 'PC5',])
+PC_List = pd.DataFrame(columns = ['PC1','PC2', 'PC3', 'PC4', 'PC5'])
 return_df_pca = pd.concat([return_df_train_pca, return_df_test_pca], axis = 0)
 
 for anom in PC_List:
@@ -492,7 +492,7 @@ step5_cumulative_market_returns_test.plot(figsize=(10,6),title='Cumulative Marke
 market_returns_test.plot(figsize=(10,6),title='Monthly Market Returns in sample', xlabel = 'Date', ylabel = 'Return in %')
 
 #Plotting predicted vs actual PC returns
-PC_List = pd.DataFrame(columns = ['PC1','PC2', 'PC3', 'PC4', 'PC5',])
+PC_List = pd.DataFrame(columns = ['PC1','PC2', 'PC3', 'PC4', 'PC5'])
 
 for anom in PC_List:
     

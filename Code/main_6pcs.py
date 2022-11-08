@@ -57,7 +57,7 @@ return_df_test_pca = sc.transform(return_df_test)
 
 
 # Applying PCA function on training and testing set
-n_pc = 5
+n_pc = 6
 pca = PCA(n_components = n_pc)
 return_df_train_pca = pca.fit_transform(return_df_train_pca)
 return_df_test_pca = pca.transform(return_df_test_pca)
@@ -74,7 +74,7 @@ print('\nPercentage of variance explained by anomaly PCs:\n', expl_var_df)
 
 '''
 REMARK:
-    First 5 PC explain over 60% of the variance, hence we use the first 5 as predicting dominant components!
+    First 6 PC explain over 60% of the variance, hence we use the first 6 as predicting dominant components!
 '''
 pc_eigenv_df = pd.DataFrame(pca.components_,columns=return_df.columns,index = pc_list)
 print(pc_eigenv_df)
@@ -83,11 +83,11 @@ print(pc_eigenv_df)
 ##### NEW ######## ACTUALLY WERTE ZIEMLICH ÄHNLICH OB SO ODER WIE OBEN ZEILE 59
 return_df_train_pca = pd.DataFrame(np.dot(pc_eigenv_df, return_df_train.transpose()).transpose())
 return_df_train_pca = return_df_train_pca.set_index(return_df_train.index)
-return_df_train_pca.columns = ['PC1', 'PC2', 'PC3', 'PC4', 'PC5']
+return_df_train_pca.columns = ['PC1', 'PC2', 'PC3', 'PC4', 'PC5', 'PC6']
 
 return_df_test_pca = pd.DataFrame(np.dot(pc_eigenv_df, return_df_test.transpose()).transpose())
 return_df_test_pca = return_df_test_pca.set_index(return_df_test.index)
-return_df_test_pca.columns = ['PC1', 'PC2', 'PC3', 'PC4', 'PC5']
+return_df_test_pca.columns = ['PC1', 'PC2', 'PC3', 'PC4', 'PC5', 'PC6']
 ########################
 
 
@@ -185,9 +185,21 @@ bm_pc5_est_test = sm.OLS(Y_ret_pc5_test, X_bm_pc5_test).fit()
 print(bm_pc5_est_train.summary())
 
 
+## PC6 regression   
+X_bm_pc6_train = sm.add_constant(np.dot(pc_eigenv_df.iloc[5,:].values, bm_df_train.transpose())[:-1])  # starting at 0 (t) and deleting last value
+X_bm_pc6_test = sm.add_constant(np.dot(pc_eigenv_df.iloc[5,:].values, bm_df_test.transpose())[:-1])  # starting at 0 (t) and deleting last value
+
+Y_ret_pc6_train = return_df_train_pca.iloc[1:,5]                                                                 # starting at 1 (t+1)
+Y_ret_pc6_test = return_df_test_pca.iloc[1:,5]                                                                 # starting at 1 (t+1)
+
+bm_pc6_est_train = sm.OLS(Y_ret_pc5_train, X_bm_pc6_train).fit()
+bm_pc6_est_test = sm.OLS(Y_ret_pc5_test, X_bm_pc6_test).fit()
+print(bm_pc6_est_train.summary())
+
+
 # collect parameters
-regressions = [m1_est, bm_pc1_est_train, bm_pc2_est_train, bm_pc3_est_train, bm_pc4_est_train, bm_pc5_est_train]
-output_df  = pd.DataFrame(index =['Own bm','Std. dev.', 'p-value', 'R_squared'], columns = ['MKT', 'PC1', 'PC2', 'PC3', 'PC4', 'PC5'])
+regressions = [m1_est, bm_pc1_est_train, bm_pc2_est_train, bm_pc3_est_train, bm_pc4_est_train, bm_pc5_est_train, bm_pc6_est_test]
+output_df  = pd.DataFrame(index =['Own bm','Std. dev.', 'p-value', 'R_squared'], columns = ['MKT', 'PC1', 'PC2', 'PC3', 'PC4', 'PC5', 'PC6'])
 
 for idx, regr in enumerate(regressions):
     output_df.iloc[0, idx] = regr.params[1]
@@ -324,7 +336,7 @@ AAlmost = Almost.sub(1)
 ## Calculate component means E_t[Z_{t+1}]
 
 # Calculate own bm ratio timeseries for each PCs and MKT and create df
-PCs = ['PC1', 'PC2', 'PC3', 'PC4', 'PC5']
+PCs = ['PC1', 'PC2', 'PC3', 'PC4', 'PC5', 'PC6']
 bm_df_step5 = bm_df['1974-01-01':'2017-12-01']
 step5_bm_df = {}
 
@@ -348,7 +360,7 @@ step5_bmc_df = step5_bmc_df.iloc[1:, :]
 
 
 # move columns MKT from output_df at the end
-output_df_new = output_df[['PC1','PC2', 'PC3', 'PC4', 'PC5', 'MKT']]
+output_df_new = output_df[['PC1','PC2', 'PC3', 'PC4', 'PC5', 'PC6', 'MKT']]
 
 
 # Multiply % change in bm with regression beta => gives % change in PC and MKT return
@@ -443,7 +455,7 @@ step5_bmc_df_test = step5_bmc_df_test.iloc[1:, :]
 
 
 # move columns MKT from output_df at the end
-output_df_new = output_df[['PC1','PC2', 'PC3', 'PC4', 'PC5', 'MKT']]
+output_df_new = output_df[['PC1','PC2', 'PC3', 'PC4', 'PC5', 'PC6', 'MKT']]
 
 
 # Multiply % change in bm with regression beta => gives % change in PC and MKT return
@@ -516,7 +528,7 @@ Information_Ratio_test = step5_excess_returns_cum_test.div(Forecast_errors_test.
 from matplotlib import pyplot as plt
 
 #Plotting predicted vs actual PC returns IS & OOS
-PC_List = pd.DataFrame(columns = ['PC1','PC2', 'PC3', 'PC4', 'PC5'])
+PC_List = pd.DataFrame(columns = ['PC1','PC2', 'PC3', 'PC4', 'PC5', 'PC6'])
 return_df_pca = pd.concat([return_df_train_pca, return_df_test_pca], axis = 0)
 
 for anom in PC_List:

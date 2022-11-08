@@ -84,12 +84,12 @@ for file in csv_filestotret10:
     li_totret10.append(locals()[fname])
     
         
-### Constructing long-short anomalies: return p10 - p1
+### Constructing long only anomalies: return p10
 ls_df = {}
 
 for idx, anom in enumerate(li_ret10):
     name = df_names[idx]
-    diff = anom.p10 - anom.p1   
+    diff = anom.p10   
     ls_df[name] = diff
     
 ls_df = pd.DataFrame(ls_df)
@@ -99,12 +99,12 @@ ls_df.drop('exchsw', inplace=True, axis=1)
 ls_df.drop('divg', inplace=True, axis=1)
 
 ### Constructing measure of relative valuation based on book-to-market ratios
-# bm = log book-to-market ratio pf10 - log p1
+# bm = log book-to-market ratio pf10
 bm_df = {}
 
 for idx, anom in enumerate(li_bmc10):
     name = df_names[idx]
-    diff = np.log(anom.p10) - np.log(anom.p1)   
+    diff = np.log(anom.p10)   
     bm_df[name] = diff
     
 bm_df = pd.DataFrame(bm_df)
@@ -177,6 +177,25 @@ market_bm_aggr_train = market_bm_aggr['1974-01-01':'1995-12-01']
 market_bm_aggr_test = market_bm_aggr['1996-01-01':'2017-12-01']
 
 
+
+
+#%%
+# betas and var estimated using train sample s.t. OOS statistics contain no look-ahead bias
+betas = []      # for each anomaly
+ls_df_ma_train = {}   # market-adjusted df
+
+# betas (calculation using train set)
+for idx, anom in enumerate(ls_df_train):
+    beta = ls_df_train[anom].cov(market_returns_train.ret)/market_returns_train.ret.var()
+    betas.append(beta)
+
+# market-scaled ls_df (only train set)
+for idx, anom in enumerate(ls_df_train):
+    ls_df_ma_train[ls_df_train.columns[idx]] = ls_df_train[anom] - betas[idx]*market_returns_train.ret
+
+ls_df_ma_train = pd.DataFrame(ls_df_ma_train)
+
+
 #%%
 ### Rescale data
 # rescale market-adj returns and bm ratios s.t. they have equal variance across anomalies
@@ -188,6 +207,9 @@ for anom in ls_df_train:
 
 for anom in bm_df_train:
     bm_df_train[anom] = bm_df_train[anom] / bm_df_train[anom].var()**(1/2)
+
+for anom in bm_df:
+    bm_df[anom] = bm_df[anom] / bm_df[anom].var()**(1/2)
 
 '''ich glaube das muss man nicht
 market_returns_train = market_returns_train / market_returns_train.var()**(1/2)
@@ -206,4 +228,5 @@ market_bm_train
 market_bm_test 
 market_bm_aggr_train 
 market_bm_aggr_test 
+ 
 
