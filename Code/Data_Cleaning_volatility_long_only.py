@@ -178,6 +178,39 @@ market_bm_aggr_test = market_bm_aggr['1996-01-01':'2017-12-01']
 
 
 
+######## Introducing past 12 month volatility of factor returns
+var_ls_df = pd.read_excel(r'../Data/var_ls_df.xlsx', sheet_name='var_ls_df', index_col=0)
+var_ls_df_train = var_ls_df['1974-01-01':'1995-12-01']
+var_ls_df_test = var_ls_df['1996-01-01':'2017-12-01']
+
+
+######## Introducing past 12 month volatility of market returns
+var_market_returns = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='var_r_mkt_ff', index_col=0)
+var_market_returns_train = var_market_returns['1974-01-01':'1995-12-01']
+var_market_returns_test = var_market_returns['1996-01-01':'2017-12-01']
+
+
+######## Defining volatility as bm_df so that no subsequent changes in code are necessary
+bm_df = var_ls_df
+bm_df_train = var_ls_df_train
+bm_df_test = var_ls_df_test
+
+
+######## Defining volatility of market returns as market_bm
+market_bm = var_market_returns
+market_bm_train = var_market_returns_train
+market_bm_test = var_market_returns_test
+
+
+# Cutting off first 11 periods for all other data frames as well
+ls_df = ls_df.tail(-11)
+ls_df_train = ls_df_train.tail(-11)
+bm_df = bm_df.tail(-11)
+bm_df_train = bm_df_train.tail(-11)
+market_returns = market_returns.tail(-11)
+market_returns_train = market_returns_train.tail(-11)
+market_bm = market_bm.tail(-11)
+market_bm_train = market_bm_train.tail(-11)
 
 
 
@@ -231,5 +264,6 @@ market_bm_test
 market_bm_aggr_train 
 market_bm_aggr_test 
  
-
-ls_df.to_csv("ls_df.csv")
+#Pulled before having added the variance of returns
+#Thus, pulled the rescaled non-adjusted long only returns
+#ls_df.to_csv("ls_df.csv")

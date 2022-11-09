@@ -82,7 +82,8 @@ for file in csv_filestotret10:
     fname = Path(file).stem
     locals()[fname] = datafile
     li_totret10.append(locals()[fname])
-           
+    
+        
 ### Constructing long-short anomalies: return p10 - p1
 ls_df = {}
 
@@ -177,13 +178,46 @@ market_bm_aggr_test = market_bm_aggr['1996-01-01':'2017-12-01']
 
 
 
+######## Introducing past 12 month volatility of factor returns
+var_ls_df = pd.read_excel(r'../Data/var_ls_df_long_only.xlsx', sheet_name='var_ls_df', index_col=0)
+var_ls_df_train = var_ls_df['1974-01-01':'1995-12-01']
+var_ls_df_test = var_ls_df['1996-01-01':'2017-12-01']
+
+
+######## Introducing past 12 month volatility of market returns
+var_market_returns = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='var_r_mkt_ff', index_col=0)
+var_market_returns_train = var_market_returns['1974-01-01':'1995-12-01']
+var_market_returns_test = var_market_returns['1996-01-01':'2017-12-01']
+
+
+######## Defining volatility as bm_df so that no subsequent changes in code are necessary
+bm_df = var_ls_df
+bm_df_train = var_ls_df_train
+bm_df_test = var_ls_df_test
+
+
+######## Defining volatility of market returns as market_bm
+market_bm = var_market_returns
+market_bm_train = var_market_returns_train
+market_bm_test = var_market_returns_test
+
+
+# Cutting off first 11 periods for all other data frames as well
+ls_df = ls_df.tail(-11)
+ls_df_train = ls_df_train.tail(-11)
+bm_df = bm_df.tail(-11)
+bm_df_train = bm_df_train.tail(-11)
+market_returns = market_returns.tail(-11)
+market_returns_train = market_returns_train.tail(-11)
+market_bm = market_bm.tail(-11)
+market_bm_train = market_bm_train.tail(-11)
+
+
 
 #%%
 # betas and var estimated using train sample s.t. OOS statistics contain no look-ahead bias
 betas = []      # for each anomaly
 ls_df_ma_train = {}   # market-adjusted df
-bm_df_ma_train = {}   # market-adjusted df
-bm_df_ma = {} # market-adjusted df
 
 # betas (calculation using train set)
 for idx, anom in enumerate(ls_df_train):
@@ -196,18 +230,6 @@ for idx, anom in enumerate(ls_df_train):
 
 ls_df_ma_train = pd.DataFrame(ls_df_ma_train)
 
-# market-scaled bm_df (only train set)
-for idx, anom in enumerate(bm_df_train):
-    bm_df_ma_train[bm_df_train.columns[idx]] = bm_df_train[anom] - betas[idx]*market_bm_train.bm
-
-bm_df_ma_train = pd.DataFrame(bm_df_ma_train)
-
-# market-scaled bm_df (entire set)
-for idx, anom in enumerate(bm_df):
-    bm_df_ma[bm_df.columns[idx]] = bm_df[anom] - betas[idx]*market_bm.bm
-
-bm_df_ma = pd.DataFrame(bm_df_ma)
-
 
 #%%
 ### Rescale data
@@ -215,14 +237,14 @@ bm_df_ma = pd.DataFrame(bm_df_ma)
 # done by dividing returns and bm for each anomaly by its std.deviation s.t. all std.dev are 1
 # only train set
 
-for anom in ls_df_ma_train:
-    ls_df_ma_train[anom] = ls_df_ma_train[anom] / ls_df_ma_train[anom].var()**(1/2)
+for anom in ls_df_train:
+    ls_df_train[anom] = ls_df_train[anom] / ls_df_train[anom].var()**(1/2)
 
-for anom in bm_df_ma_train:
-    bm_df_ma_train[anom] = bm_df_ma_train[anom] / bm_df_ma_train[anom].var()**(1/2)
-    
-for anom in bm_df_ma:
-    bm_df_ma[anom] = bm_df_ma[anom] / bm_df_ma[anom].var()**(1/2)
+for anom in bm_df_train:
+    bm_df_train[anom] = bm_df_train[anom] / bm_df_train[anom].var()**(1/2)
+
+for anom in bm_df:
+    bm_df[anom] = bm_df[anom] / bm_df[anom].var()**(1/2)
 
 '''ich glaube das muss man nicht
 market_returns_train = market_returns_train / market_returns_train.var()**(1/2)
@@ -231,10 +253,9 @@ market_bm_train = market_bm_train / market_bm_train.var()**(1/2)
 
 
 # Final dataframes
-ls_df_ma_train 
-ls_df_test
-bm_df_ma
-bm_df_ma_train 
+ls_df_train 
+ls_df_test  
+bm_df_train 
 bm_df_test  
 market_returns_train 
 market_returns_test 
@@ -242,7 +263,7 @@ market_bm_train
 market_bm_test 
 market_bm_aggr_train 
 market_bm_aggr_test 
-
-
+ 
+#Pulled before having added the variance of returns
+#Thus, pulled the rescaled non-adjusted long-short returns
 ls_df.to_csv("ls_df.csv")
-
