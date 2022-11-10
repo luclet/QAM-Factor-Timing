@@ -96,6 +96,7 @@ ls_df = pd.DataFrame(ls_df)
 
 # drop factors that are not in paper
 ls_df.drop('exchsw', inplace=True, axis=1)
+ls_df.drop('divp', inplace=True, axis=1)
 ls_df.drop('divg', inplace=True, axis=1)
 
 ### Constructing measure of relative valuation based on book-to-market ratios
@@ -111,6 +112,7 @@ bm_df = pd.DataFrame(bm_df)
 
 # drop factors that are not in paper
 bm_df.drop('exchsw', inplace=True, axis=1)
+bm_df.drop('divp', inplace=True, axis=1)
 bm_df.drop('divg', inplace=True, axis=1)
 
 

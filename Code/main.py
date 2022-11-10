@@ -282,6 +282,12 @@ R2_Table.columns = ['IS', 'OOS']
 R2_Table.index.name = 'Anomalies'
 print(R2_Table)
 
+#%%
+
+
+
+#%%
+
 
 ''' TODO: CORRECT!
 # aufsplitten nach faktoren
