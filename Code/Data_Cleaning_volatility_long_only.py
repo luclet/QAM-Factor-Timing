@@ -97,6 +97,7 @@ ls_df = pd.DataFrame(ls_df)
 # drop factors that are not in paper
 ls_df.drop('exchsw', inplace=True, axis=1)
 ls_df.drop('divg', inplace=True, axis=1)
+ls_df.drop('divp', inplace=True, axis=1)
 
 ### Constructing measure of relative valuation based on book-to-market ratios
 # bm = log book-to-market ratio pf10
@@ -112,6 +113,7 @@ bm_df = pd.DataFrame(bm_df)
 # drop factors that are not in paper
 bm_df.drop('exchsw', inplace=True, axis=1)
 bm_df.drop('divg', inplace=True, axis=1)
+bm_df.drop('divp', inplace=True, axis=1)
 
 
 #%%
@@ -122,27 +124,6 @@ print('Dropping the following anomalies is b/m portfolios: ', bm_df.columns[bm_d
 ls_df = ls_df.dropna(axis='columns')
 bm_df = bm_df.dropna(axis='columns')
 
-#refit 
-#ls_df.drop('dur', inplace=True, axis=1)
-#ls_df.drop('inv', inplace=True, axis=1)
-#bm_df.drop('inv', inplace=True, axis=1)
-#bm_df.drop('dur', inplace=True, axis=1)
-
-#bm_df.drop('ipo', inplace=True, axis=1)
-#%% COULD BE DELETED
-'''
-### Market adjust data
-# check which anomaly has max stocks in pf to calc market returns (siehe check_max.xlsx)
-sums = []
-
-for a in li_n10:
-    s = a.sum(axis=1)
-    ss = s.sum()
-    sums.append(ss)
-    
-anom_maxsum = max(sums)
-anom_maxsumidx = sums.index(anom_maxsum)  # -> index: 1 (and others but use that)
-'''
 
 
 #%% MARKET DATA
@@ -150,16 +131,8 @@ anom_maxsumidx = sums.index(anom_maxsum)  # -> index: 1 (and others but use that
 # split up the data: training set (first half of original data frame), normal reproduction OOS (till 12.17) und new OOS (12.19)
 # each 264 data points
 
-#market_returns = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='r_mkt', index_col=0)
+# market data
 market_returns = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='r_mkt_ff', index_col=0)
-#arket_bm = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt', index_col=0)
-#market_bm = np.log(pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt', index_col=0)) #bm_mkt ist falsch, da wir hier die Verzerrung durch die n's haben
-#market_bm = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_lorena', index_col=0)
-#market_bm = np.log(pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_lorena', index_col=0)) #fixed the verzerrung der n's, könnte richtig sein
-#market_bm = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_lucas', index_col=0) #aus excel ist falsch, da wir die Sortierung nicht eingefügt haben
-#market_bm = np.log(pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_aggr', index_col=0))
-market_bm_aggr = np.log(pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_aggr', index_col=0))
-#market_bm = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_by_n', index_col=0)
 market_bm = pd.read_excel(r'../Data/market_calcs.xlsx', sheet_name='bm_mkt_equal', index_col=0)
 
 
@@ -173,13 +146,11 @@ market_returns_test = market_returns['1996-01-01':'2017-12-01']
 market_returns = market_returns['1974-01-01':'2017-12-01']
 market_bm_train = market_bm['1974-01-01':'1995-12-01']
 market_bm_test = market_bm['1996-01-01':'2017-12-01']
-market_bm_aggr_train = market_bm_aggr['1974-01-01':'1995-12-01']
-market_bm_aggr_test = market_bm_aggr['1996-01-01':'2017-12-01']
 
 
 
 ######## Introducing past 12 month volatility of factor returns
-var_ls_df = pd.read_excel(r'../Data/var_ls_df.xlsx', sheet_name='var_ls_df', index_col=0)
+var_ls_df = pd.read_excel(r'../Data/var_ls_df_long_only.xlsx', sheet_name='var_ls_df', index_col=0)
 var_ls_df_train = var_ls_df['1974-01-01':'1995-12-01']
 var_ls_df_test = var_ls_df['1996-01-01':'2017-12-01']
 
@@ -246,10 +217,6 @@ for anom in bm_df_train:
 for anom in bm_df:
     bm_df[anom] = bm_df[anom] / bm_df[anom].var()**(1/2)
 
-'''ich glaube das muss man nicht
-market_returns_train = market_returns_train / market_returns_train.var()**(1/2)
-market_bm_train = market_bm_train / market_bm_train.var()**(1/2)
-'''
 
 
 # Final dataframes
@@ -261,9 +228,3 @@ market_returns_train
 market_returns_test 
 market_bm_train 
 market_bm_test 
-market_bm_aggr_train 
-market_bm_aggr_test 
- 
-#Pulled before having added the variance of returns
-#Thus, pulled the rescaled non-adjusted long only returns
-#ls_df.to_csv("ls_df.csv")

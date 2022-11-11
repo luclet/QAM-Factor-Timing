@@ -1,3 +1,0 @@
-Changes Made in Lucas' code by Lorena (08.10.2022):
-- adjusted the path such that the path is relative and doesn't need to be adjusted for every user (../)
-- 4  lists containing all single df instead of one huge df -> easier to access data, because your li_li was an inaccessible list/df 

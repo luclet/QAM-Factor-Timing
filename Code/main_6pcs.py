@@ -13,6 +13,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LinearRegression
 import statsmodels.api as sm
+from matplotlib import pyplot as plt
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -42,8 +43,7 @@ market_bm = data.market_bm
 market_bm_train = data.market_bm_train
 market_bm_test = data.market_bm_test
 
-market_bm_aggr_train = data.market_bm_aggr_train
-market_bm_aggr_test = data.market_bm_aggr_test
+
 
 
 #%%
@@ -80,7 +80,7 @@ pc_eigenv_df = pd.DataFrame(pca.components_,columns=return_df.columns,index = pc
 print(pc_eigenv_df)
 
 
-##### NEW ######## ACTUALLY WERTE ZIEMLICH ÄHNLICH OB SO ODER WIE OBEN ZEILE 59
+# calculating pca returns weighted by eigenvector loading
 return_df_train_pca = pd.DataFrame(np.dot(pc_eigenv_df, return_df_train.transpose()).transpose())
 return_df_train_pca = return_df_train_pca.set_index(return_df_train.index)
 return_df_train_pca.columns = ['PC1', 'PC2', 'PC3', 'PC4', 'PC5', 'PC6']
@@ -88,7 +88,7 @@ return_df_train_pca.columns = ['PC1', 'PC2', 'PC3', 'PC4', 'PC5', 'PC6']
 return_df_test_pca = pd.DataFrame(np.dot(pc_eigenv_df, return_df_test.transpose()).transpose())
 return_df_test_pca = return_df_test_pca.set_index(return_df_test.index)
 return_df_test_pca.columns = ['PC1', 'PC2', 'PC3', 'PC4', 'PC5', 'PC6']
-########################
+
 
 
 # Including market pf as pricing factor
@@ -108,24 +108,19 @@ return_df_test_pca['MKT'] = market_returns_test
 '''
 '''
  - Eigenvectors: pca.components_ is the set of all eigenvectors (aka loadings) for your projection space (one eigenvector for each principal component).
- - Eigenvalues: https://stackoverflow.com/questions/31909945/obtain-eigen-values-and-vectors-from-sklearn-pca/31941631#31941631
 '''
-# Cals own bm_i,t for each PC_i,t+1
-# --> for loow over all PC and MKT
+# --> regressor: bm_i,t = q'_i * bm^F_i
+# lin. comb. of eigenvector loadings q with bm (q'_i * bm^F_i)
 
 params = []
 
 ## Market regression
 X = sm.add_constant(np.log(market_bm_train[:-1]))
-#X = sm.add_constant(np.log(market_bm_aggr_train[:-1]))
-#XX = market_bm_train.to_numpy()
-#XX = np.log(market_bm_train)
 m1_est = sm.OLS(return_df_train_pca.iloc[1:,-1].values, X).fit()
 #print(m1_est.summary())
 
 
-## PC1 regression   --> regressor: bm_i,t = q'_i * bm^F_i
-# lin. comb. of eigenvector loadings q with bm (q'_i * bm^F_i)
+## PC1 regression   
 X_bm_pc1_train = sm.add_constant(np.dot(pc_eigenv_df.iloc[0,:].values, bm_df_train.transpose())[:-1])  # starting at 0 (t) and deleting last value
 X_bm_pc1_test = sm.add_constant(np.dot(pc_eigenv_df.iloc[0,:].values, bm_df_test.transpose())[:-1])  # starting at 0 (t) and deleting last value
 
@@ -134,7 +129,7 @@ Y_ret_pc1_test = return_df_test_pca.iloc[1:,0]                                  
 
 bm_pc1_est_train = sm.OLS(Y_ret_pc1_train, X_bm_pc1_train).fit()
 bm_pc1_est_test = sm.OLS(Y_ret_pc1_test, X_bm_pc1_test).fit()
-print(bm_pc1_est_train.summary())
+#print(bm_pc1_est_train.summary())
 
 
 ## PC2 regression   
@@ -146,7 +141,7 @@ Y_ret_pc2_test = return_df_test_pca.iloc[1:,1]                                  
 
 bm_pc2_est_train = sm.OLS(Y_ret_pc2_train, X_bm_pc2_train).fit()
 bm_pc2_est_test = sm.OLS(Y_ret_pc2_test, X_bm_pc2_test).fit()
-print(bm_pc2_est_train.summary())
+#print(bm_pc2_est_train.summary())
 
 
 ## PC3 regression   
@@ -158,7 +153,7 @@ Y_ret_pc3_test = return_df_test_pca.iloc[1:,2]                                  
 
 bm_pc3_est_train = sm.OLS(Y_ret_pc3_train, X_bm_pc3_train).fit()
 bm_pc3_est_test = sm.OLS(Y_ret_pc3_test, X_bm_pc3_test).fit()
-print(bm_pc3_est_train.summary())
+#print(bm_pc3_est_train.summary())
 
 
 ## PC4 regression   
@@ -170,7 +165,7 @@ Y_ret_pc4_test = return_df_test_pca.iloc[1:,3]                                  
 
 bm_pc4_est_train = sm.OLS(Y_ret_pc4_train, X_bm_pc4_train).fit()
 bm_pc4_est_test = sm.OLS(Y_ret_pc4_test, X_bm_pc4_test).fit()
-print(bm_pc4_est_train.summary())
+#print(bm_pc4_est_train.summary())
 
 
 ## PC5 regression   
@@ -182,7 +177,7 @@ Y_ret_pc5_test = return_df_test_pca.iloc[1:,4]                                  
 
 bm_pc5_est_train = sm.OLS(Y_ret_pc5_train, X_bm_pc5_train).fit()
 bm_pc5_est_test = sm.OLS(Y_ret_pc5_test, X_bm_pc5_test).fit()
-print(bm_pc5_est_train.summary())
+#print(bm_pc5_est_train.summary())
 
 
 ## PC6 regression   
@@ -194,7 +189,7 @@ Y_ret_pc6_test = return_df_test_pca.iloc[1:,5]                                  
 
 bm_pc6_est_train = sm.OLS(Y_ret_pc5_train, X_bm_pc6_train).fit()
 bm_pc6_est_test = sm.OLS(Y_ret_pc5_test, X_bm_pc6_test).fit()
-print(bm_pc6_est_train.summary())
+#print(bm_pc6_est_train.summary())
 
 
 # collect parameters
@@ -239,16 +234,6 @@ delta_predict_ret_train.index = bm_df_train[2:].index
 delta_predict_ret_test.index = bm_df_test[2:].index
 
 
-# #Calculate change in factor returns for train and test
-# delta_ret_train = return_df_train / return_df_train.shift(1) - 1
-# delta_ret_train = delta_ret_train.iloc[1:,:]
-# delta_ret_train = delta_ret_train.tail(-1)
-# delta_ret_train.index = delta_bm_train.index
-
-# delta_ret_test = return_df_test / return_df_test.shift(1) - 1
-# delta_ret_test = delta_ret_test.iloc[1:,:]
-# delta_ret_test = delta_ret_test.tail(-1)
-# delta_ret_test.index = delta_bm_test.index
 
 # Calculate predicted return: ret*(1+%change)
 return_df_train_adj = return_df_train.head(-1)
@@ -295,36 +280,6 @@ R2_Table.index.name = 'Anomalies'
 print(R2_Table)
 
 
-''' TODO: CORRECT!
-# aufsplitten nach faktoren
-# forecast errors per pc
-# matrix soll cov von pc returns und faktor returns haben => zeilen factors, spalten pcs und jeweils deren covs
-
-
-#Constructing forecast errors
-fc_err_train = delta_bm_train.subtract(return_df_train, axis='columns', level=None, fill_value=None)
-fc_err_train = fc_err_train.iloc[1: , :]
-fc_err_train = fc_err_train.iloc[:-1 , :]
-
-fc_err_test = delta_bm_test.subtract(return_df_test, axis='columns', level=None, fill_value=None)
-fc_err_test = fc_err_test.iloc[1: , :]
-fc_err_test = fc_err_test.iloc[:-1 , :]
-
-return_df_test_trimmed = return_df_test.iloc[1: , :]
-return_df_test_trimmed = return_df_test_trimmed.iloc[:-1 , :] 
-
-cov_df = [delta_bm_train, return_df_train, Anomalies]
-cov_df = pd.DataFrame(cov_df).T
-cov_df = cov_df.set_index(2)
-cov_df.columns = ['Predicted', 'Actual']
-cov_df.index.name = 'Anomalies'
-
-var_fc_err = fc_err_test.var()
-var_ret = return_df_test.var()
-Almost = var_fc_err.div(var_ret)
-AAlmost = Almost.sub(1)
-#Constructing conditional covariance matrix of market and PC returns
-'''
 
 
 
@@ -525,7 +480,7 @@ Information_Ratio_test = step5_excess_returns_cum_test.div(Forecast_errors_test.
 
 
 ##################### Plots #####################
-from matplotlib import pyplot as plt
+
 
 #Plotting predicted vs actual PC returns IS & OOS
 PC_List = pd.DataFrame(columns = ['PC1','PC2', 'PC3', 'PC4', 'PC5', 'PC6'])
