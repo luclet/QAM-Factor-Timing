@@ -3,6 +3,8 @@
 
 Authors: Lucas Letulé, Jonas Neller, Lorena Tassone
 
+This project tries to replicate and extend the paper "Factor Timing" by Haddad et al. [2020].
+
 All the used data can be found in the folder "Data", where the folder "FT_portfolio_sorts-monthly-05FEB2020" contains the data provided by Haddad et al. [2020].
 We have different code version:
 <ul>
