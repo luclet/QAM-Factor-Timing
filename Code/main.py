@@ -95,6 +95,17 @@ return_df_train_pca['MKT'] = market_returns_train
 return_df_test_pca['MKT'] = market_returns_test
 
 
+# Eigenvector plots
+for ix, pc in pc_eigenv_df.iterrows(): 
+    pc = pc.sort_values()
+    plt.figure(figsize=[4.5, 6.5])
+    plt.barh(np.arange(len(pc_eigenv_df.columns)), pc.values, align='center')
+    plt.yticks(np.arange(len(pc_eigenv_df.columns)), pc.index)
+    plt.tick_params(labelsize=8)
+    plt.xlim([-0.5, 0.5])
+    plt.title(pc.name+' Anomalies Eigenvector')
+    plt.show()
+
 
 #%%
 ### 3. Prediciting the large PCs of anomaly returns (Predictive Regression)
